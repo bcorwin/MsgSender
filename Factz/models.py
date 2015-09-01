@@ -18,6 +18,7 @@ class Messages(models.Model):
 class Subscriptions(models.Model):
     name = models.CharField(max_length=16)
     active = models.BooleanField()
+    message_id = models.ForeignKey(Messages)
     last_sent = models.DateTimeField(blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -25,7 +26,6 @@ class Subscriptions(models.Model):
 class Numbers(models.Model):
     phone_number = models.CharField(max_length=15)
     subscription_id = models.ForeignKey(Subscriptions)
-    message_id = models.ForeignKey(Messages)
     message_cnt = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(blank=True)
