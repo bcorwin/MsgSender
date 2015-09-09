@@ -1,42 +1,58 @@
 from django.db import models
 from random import sample
 
+class Variable(models.Model):
+    name = models.CharField(max_length=64, unique=True)
+    value = models.CharField(max_length=128)
+    
+    def __str__(self):
+        return self.name + "=" + self.value
+    
+class Subscription(models.Model):
+    name = models.CharField(max_length=16, unique=True)
+    active = models.BooleanField()
+    last_sent = models.DateTimeField(null=True, blank=True)
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+
+class Message(models.Model):
+    message = models.CharField(max_length=320)
+    follow_up = models.CharField(max_length=160, blank=True, null=True)
+    source = models.CharField(max_length=160, blank=True, null=True)
+    subscription_id = models.ForeignKey(Subscription)
+    count = models.IntegerField(default=0)
+    active = models.BooleanField(default=True)
+    last_sent = models.DateTimeField(null=True, blank=True)
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.message
+        
+class Number(models.Model):
+    phone_number = models.CharField(max_length=15)
+    subscription_id = models.ForeignKey(Subscription)
+    message_cnt = models.IntegerField(default=0)
+    active = models.BooleanField(default=True)
+    last_sent = models.DateTimeField(null=True, blank=True)
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+
 def rand_code():
     code = sample('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 1) + sample('1234567890', 4)
     return ''.join(code)
-        
-class Messages(models.Model):
-    message = models.CharField(max_length=320)
-    follow_up = models.CharField(max_length=160)
-    source = models.CharField(max_length=160)
-    count = models.IntegerField(default=0)
-    active = models.BooleanField(default=True)
-    last_sent = models.DateTimeField(blank=True)
-    inserted_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
-    
-class Subscriptions(models.Model):
-    name = models.CharField(max_length=16)
-    active = models.BooleanField()
-    message_id = models.ForeignKey(Messages)
-    last_sent = models.DateTimeField(blank=True)
-    inserted_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
-    
-class Numbers(models.Model):
-    phone_number = models.CharField(max_length=15)
-    subscription_id = models.ForeignKey(Subscriptions)
-    message_cnt = models.IntegerField(default=0)
-    active = models.BooleanField(default=True)
-    last_sent = models.DateTimeField(blank=True)
-    inserted_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
-    
+
 class Unconfirmed(models.Model):
     phone_number = models.CharField(max_length=15)
     confirmation_code = models.CharField(max_length=5, default=rand_code)
-    subscription_id = models.ForeignKey(Subscriptions)
+    subscription_id = models.ForeignKey(Subscription)
     inserted_date = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name_plural = 'Unconfirmed'
 
     def __str__(self):
         return self.phone_number + " (" + self.confirmation_code + ")"
