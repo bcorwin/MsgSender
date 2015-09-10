@@ -32,30 +32,27 @@ class Message(models.Model):
     def __str__(self):
         return self.message
         
+def rand_code():
+    code = sample('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 2) + sample('1234567890', 4)
+    return ''.join(code)
+
 class Number(models.Model):
     phone_number = models.CharField(max_length=15)
-    subscription_id = models.ForeignKey(Subscription)
+    confirmation_code = models.CharField(max_length=6, default=rand_code)
     message_cnt = models.IntegerField(default=0)
-    active = models.BooleanField(default=True)
+    confirmed = models.BooleanField(default=False)
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
-def rand_code():
-    code = sample('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 1) + sample('1234567890', 4)
-    return ''.join(code)
-
-class Unconfirmed(models.Model):
-    phone_number = models.CharField(max_length=15)
-    confirmation_code = models.CharField(max_length=5, default=rand_code)
+class activeSubscription(models.Model):
+    #Force unique on number_id and subscription_id
+    number_id = models.ForeignKey(Number)
     subscription_id = models.ForeignKey(Subscription)
+    active = models.BooleanField(default=True)
+    last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name_plural = 'Unconfirmed'
-
-    def __str__(self):
-        return self.phone_number + " (" + self.confirmation_code + ")"
+    updated_date = models.DateTimeField(auto_now=True)
         
     #To do:
         # On save
