@@ -1,2 +1,11 @@
+__pycache__
+*.pyc
+staticfiles
+MsgSender/local_settings.py
+MsgSender/local_settings.pyc
+local_settings.py
+local_settings.pyc
 db.sqlite3
-**/migrations
+db.sqlite3*
+*.log
+Commands.txt
