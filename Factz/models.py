@@ -10,7 +10,7 @@ class Variable(models.Model):
     
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
-    active = models.BooleanField()
+    active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -48,7 +48,7 @@ class Number(models.Model):
 class activeSubscription(models.Model):
     number_id = models.ForeignKey(Number)
     subscription_id = models.ForeignKey(Subscription)
-    message_id = models.ForeignKey(Message)
+    message_id = models.ForeignKey(Message, blank=True, null=True)
     message_cnt = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)

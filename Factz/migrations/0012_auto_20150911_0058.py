@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='activesubscription',
             name='message_id',
-            field=models.ForeignKey(default=-1, to='Factz.Message'),
+            field=models.ForeignKey(blank=True, null=True, to='Factz.Message'),
             preserve_default=False,
         ),
         migrations.AlterUniqueTogether(

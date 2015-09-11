@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='unconfirmed',
             name='confirmation_code',
-            field=models.CharField(default=Factz.models.rand_code, max_length=5),
+            field=models.CharField(default=Factz.models.rand_code, max_length=6),
         ),
     ]
