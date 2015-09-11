@@ -1,1 +1,13 @@
 Django==1.8.4
+dj-database-url==0.3.0
+gunicorn==19.3.0
+Jinja2==2.7.3
+six==1.9.0
+Unidecode==0.4.17
+whitenoise==1.0.6
+psycopg2==2.5.4
+python-postmark==0.4.7
+newrelic
+pytz==2014.10
+pylibmc==1.4.0
+django-pylibmc==0.6.0
