@@ -46,13 +46,17 @@ class Number(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
 
 class activeSubscription(models.Model):
-    #Force unique on number_id and subscription_id
     number_id = models.ForeignKey(Number)
     subscription_id = models.ForeignKey(Subscription)
+    message_id = models.ForeignKey(Message)
+    message_cnt = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('number_id', 'subscription_id')
         
     #To do:
         # On save
