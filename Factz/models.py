@@ -44,7 +44,22 @@ class Number(models.Model):
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-
+    
+    def save(self, *args, **kwargs):
+        phone_number = str(self.phone_number)
+        phonePattern = re.compile(r'^\D*\+{0,1}1{0,1}\D*(\d{3})\D*(\d{3})\D*(\d{4}).*$', re.VERBOSE)
+        if phonePattern.match(phone_number):
+            grps = phonePattern.search(phone_number).groups()
+            self.phone_number = "+1" + ''.join(grps[0:3])
+        else:
+            raise ValueError(phone_number + " is not a valid phone number format.")
+        # To do: send a test text message (or just send the confirmation message here?)
+        # to validate that the number can recieve texts
+        super(Number, self).save(*args, **kwargs)
+    
+    class Meta:
+        unique_together = ('phone_number')
+        
 class activeSubscription(models.Model):
     number_id = models.ForeignKey(Number)
     subscription_id = models.ForeignKey(Subscription)
@@ -59,11 +74,6 @@ class activeSubscription(models.Model):
         unique_together = ('number_id', 'subscription_id')
         
     #To do:
-        # On save
-            # p_h is in correct format (E.164 format)
-            # p_h is not already in the unconfirmed
-            # p_h is not already in numbers
-            # send confirmation number to number
         # Add a function to confirm a number:
             # check if code = confirmation code
             # if so, move to Numbers and remove from Unconfirmed
