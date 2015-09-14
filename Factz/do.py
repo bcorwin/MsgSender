@@ -1,11 +1,16 @@
-from Factz.models import Variable, Message
 from datetime import datetime
-from random import choice
+from random import choice, sample
 
-def get_value(name):
-    return Variable.objects.filter(name=name)
+def rand_code():
+    code = sample('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 2) + sample('1234567890', 4)
+    return ''.join(code)
+
+def get_value(varname):
+    from Factz.models import Variable
+    return Variable.objects.get(name=varname).val
     
 def next_message(subscription_id):
+    from Factz.models import Message
     today = datetime.now().date()
     msg_set = Message.objects.all().filter(subscription_id=subscription_id)
     msg_set = msg_set.filter(active=True)

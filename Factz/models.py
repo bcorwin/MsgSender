@@ -1,12 +1,14 @@
 from django.db import models
-from random import sample
+from Factz.do import rand_code
+from Factz.messaging import send_test_message
+import re
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
-    value = models.CharField(max_length=128)
+    val = models.CharField(max_length=128)
     
     def __str__(self):
-        return self.name + "=" + self.value
+        return self.name + "=" + self.val
     
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
@@ -31,13 +33,9 @@ class Message(models.Model):
     
     def __str__(self):
         return self.message
-        
-def rand_code():
-    code = sample('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 2) + sample('1234567890', 4)
-    return ''.join(code)
 
 class Number(models.Model):
-    phone_number = models.CharField(max_length=15)
+    phone_number = models.CharField(max_length=15, unique=True)
     confirmation_code = models.CharField(max_length=6, default=rand_code)
     message_cnt = models.IntegerField(default=0)
     confirmed = models.BooleanField(default=False)
@@ -55,10 +53,15 @@ class Number(models.Model):
             raise ValueError(phone_number + " is not a valid phone number format.")
         # To do: send a test text message (or just send the confirmation message here?)
         # to validate that the number can recieve texts
+		
+        chk = send_test_message(message_text="test", to_number=phone_number)
+        if chk[0] != 0:
+            raise ValueError(chk[1])
+		
         super(Number, self).save(*args, **kwargs)
-    
-    class Meta:
-        unique_together = ('phone_number')
+		
+    def __str__(self):
+        return self.phone_number
         
 class activeSubscription(models.Model):
     number_id = models.ForeignKey(Number)
