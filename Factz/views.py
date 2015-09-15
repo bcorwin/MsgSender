@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 #@twilio_view
 @csrf_exempt
 def sms_reply(request):
-    from_number = request.POST['From']
+    #from_number = request.REQUEST['From']
     r = Response()
     r.message('Hello from your Django app!')
     return r
