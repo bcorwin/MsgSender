@@ -19,5 +19,5 @@ from Factz import views
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^sms/reply/', views.sms_reply),
+    url(r'^sms/reply', views.sms_reply),
 ]
