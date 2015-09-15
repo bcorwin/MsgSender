@@ -45,7 +45,7 @@ class Number(models.Model):
     def save(self, *args, **kwargs):
         self.phone_number = format_number(self.phone_number)
         
-        chk = send_test_message(message_text="test", to_number=phone_number)
+        chk = send_test_message(to_number=self.phone_number)
         if chk[0] != 0:
             raise ValueError(chk[1])
 		
