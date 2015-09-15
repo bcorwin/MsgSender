@@ -1,7 +1,6 @@
 from django.db import models
-from Factz.do import rand_code
+from Factz.do import rand_code, format_number
 from Factz.messaging import send_test_message
-import re
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -44,16 +43,8 @@ class Number(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     
     def save(self, *args, **kwargs):
-        phone_number = str(self.phone_number)
-        phonePattern = re.compile(r'^\D*\+{0,1}1{0,1}\D*(\d{3})\D*(\d{3})\D*(\d{4}).*$', re.VERBOSE)
-        if phonePattern.match(phone_number):
-            grps = phonePattern.search(phone_number).groups()
-            self.phone_number = "+1" + ''.join(grps[0:3])
-        else:
-            raise ValueError(phone_number + " is not a valid phone number format.")
-        # To do: send a test text message (or just send the confirmation message here?)
-        # to validate that the number can recieve texts
-		
+        self.phone_number = format_number(self.phone_number)
+        
         chk = send_test_message(message_text="test", to_number=phone_number)
         if chk[0] != 0:
             raise ValueError(chk[1])

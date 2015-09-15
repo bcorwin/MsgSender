@@ -1,5 +1,6 @@
 from datetime import datetime
 from random import choice, sample
+import re
 
 def rand_code():
     code = sample('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 2) + sample('1234567890', 4)
@@ -22,3 +23,17 @@ def next_message(subscription_id):
     
     #randomly select an id given the above weights
     return int(choice(''.join(str(i)*a for i,a in zip(ids, ages))))
+    
+def format_number(phone_number):
+    phone_number = str(phone_number)
+    phonePattern = re.compile(r'^\D*\+{0,1}1{0,1}\D*(\d{3})\D*(\d{3})\D*(\d{4}).*$', re.VERBOSE)
+    if phonePattern.match(phone_number):
+        grps = phonePattern.search(phone_number).groups()
+        out = "+1" + ''.join(grps[0:3])
+    else:
+        raise ValueError(phone_number + " is not a valid phone number format.")
+    return(out)
+    
+def lookup_number(number):
+    from Factz.models import Number
+    
