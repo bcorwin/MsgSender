@@ -1,11 +1,10 @@
-from django.http import HttpResponse
-from Factz.models import Number
 from Factz.do import format_number
-import twilio.twiml
+from django_twilio.decorators import twilio_view
+from twilio.twiml import Response
 
-
-# Create your views here.
+@twilio_view
 def sms_reply(request):
-    resp = twilio.twiml.Response()
-    resp.message(str(request.REQUEST))
-    return HttpResponse(resp.toxml(), content_type="text/xml")
+    #str(request.REQUEST)
+    r = Response()
+    r.message('Hello from your Django app!')
+    return r
