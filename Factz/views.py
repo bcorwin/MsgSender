@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 #@twilio_view
-
+@csrf_exempt
 def sms_reply(request):
     #str(request.REQUEST)
     #r = Response()
