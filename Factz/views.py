@@ -1,20 +1,19 @@
 from Factz.do import format_number
-#from django_twilio.decorators import twilio_view
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
+from django_twilio.decorators import twilio_view
+from twilio.twiml import Response
 from Factz.models import Number
 
-#@twilio_view
-@csrf_exempt
+@twilio_view
 def sms_reply(request):
     if request.method == "POST":
         from_number = format_number(request.POST['From'])
     elif request.method == "GET":
         from_number = format_number(request.GET['From'])
         
+    r = Response()
     try:
         cc = Number.objects.get(phone_number=from_number).confirmation_code
-        twiml = '<Response><Message>Your confirmation code:' + cc + '</Message></Response>'
+        r.message("Your confirmation code: " + cc)
     except:
-        twiml = '<Response><Message>To sign up for PoopFactz go to www.PoopFactz.com</Message></Response>'
-    return HttpResponse(twiml, content_type='text/xml')
+        r.message("To sign up for PoopFactz go to www.PoopFactz.com")
+    return r
