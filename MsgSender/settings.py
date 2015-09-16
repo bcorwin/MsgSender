@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,6 +26,10 @@ SECRET_KEY = '_rv3k=iww=+@)v=!!#_k39fx3brz=xs-upxgemk-w$!p-mvyib'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+# Honor the 'X-Forwarded-Proto' header for request.is_secure()
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Allow all host headers
 ALLOWED_HOSTS = ['*']
 
 
@@ -37,11 +42,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    #'django_twilio',
+    'django_twilio',
     'Factz',
 )
 
 MIDDLEWARE_CLASSES = (
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -76,12 +82,8 @@ WSGI_APPLICATION = 'MsgSender.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': dj_database_url.config()
 }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -101,6 +103,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = 'staticfiles'
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
+
+TWILIO_TEST_SID = "AC15e4551c6b47b8131188862b3eb22c58"
+TWILIO_TEST_TOKEN = "ded1abfef63b838da2159d1cc9d5f133"
+TWILIO_TEST_NUMBER = "+15005550006"
+TWILIO_LIVE_NUMBER = "+14438191066"
+
+try:
+    TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
+    TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+except:
+    pass
 
 try:
     from local_settings import *

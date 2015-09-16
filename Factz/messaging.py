@@ -1,12 +1,9 @@
+from django.conf import settings
 import twilio
 from twilio.rest import TwilioRestClient
-from Factz.do import get_value
 
-def send_text(message, to_number, from_number=None, account_sid=None, auth_token=None):
+def send_text(message, to_number, from_number=settings.TWILIO_LIVE_NUMBER, account_sid=settings.TWILIO_ACCOUNT_SID, auth_token=settings.TWILIO_AUTH_TOKEN):
     # Low level function to send text messages using Twilio, sends using live keys by default
-    if from_number == None: from_number=get_value("twilio_live_number")
-    if account_sid == None: account_sid=get_value("twilio_live_sid")
-    if auth_token == None: auth_token=get_value("twilio_live_token")
     try:
         client = TwilioRestClient(account_sid, auth_token)
         sms = client.sms.messages.create(body=message, to=to_number, from_=from_number)
@@ -33,9 +30,9 @@ def send_test_message(number_id=None, to_number=None):
     elif number_id != None:
         to_number = Number.objects.get(id=number_id).phone_number
     
-    from_number=get_value("twilio_test_number")
-    account_sid=get_value("twilio_test_sid")
-    auth_token=get_value("twilio_test_token")
+    from_number= settings.TWILIO_TEST_NUMBER
+    account_sid= settings.TWILIO_TEST_SID
+    auth_token = settings.TWILIO_TEST_TOKEN
     
     out = send_text("Test.", to_number, from_number, account_sid, auth_token)
     return(out)
