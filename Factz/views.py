@@ -7,7 +7,11 @@ from Factz.models import Number
 #@twilio_view
 @csrf_exempt
 def sms_reply(request):
-    from_number = format_number(request.POST['From'])
+    if request.method == "POST":
+        from_number = format_number(request.POST['From'])
+    elif request.method == "GET":
+        from_number = format_number(request.GET['From'])
+        
     try:
         cc = Number.objects.get(phone_number=from_number).confirmation_code
         twiml = '<Response><Message>Your confirmation code:' + cc + '</Message></Response>'

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -77,7 +78,7 @@ WSGI_APPLICATION = 'MsgSender.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+        'ENGINE': dj_database_url.config(),
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
@@ -101,6 +102,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+TWILIO_TEST_SID = "AC15e4551c6b47b8131188862b3eb22c58"
+TWILIO_TEST_TOKEN = "ded1abfef63b838da2159d1cc9d5f133"
+TWILIO_TEST_NUMBER = "+15005550006"
+TWILIO_LIVE_NUMBER = "+14438191066"
+
+try:
+    TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
+    TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+except:
+    pass
 
 try:
     from local_settings import *
