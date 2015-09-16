@@ -26,6 +26,10 @@ SECRET_KEY = '_rv3k=iww=+@)v=!!#_k39fx3brz=xs-upxgemk-w$!p-mvyib'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+# Honor the 'X-Forwarded-Proto' header for request.is_secure()
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Allow all host headers
 ALLOWED_HOSTS = ['*']
 
 
@@ -50,6 +54,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
 )
 
 ROOT_URLCONF = 'MsgSender.urls'
