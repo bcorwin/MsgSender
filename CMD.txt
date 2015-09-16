@@ -1,0 +1,3 @@
+D:\KY\Dropbox\KY\Python\MsgSender> C:\Python34\python manage.py runserver
+
+heroku run python manage.py migrate --app poopfactz
