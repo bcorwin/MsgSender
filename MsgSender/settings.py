@@ -103,6 +103,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = 'staticfiles'
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
 
 TWILIO_TEST_SID = "AC15e4551c6b47b8131188862b3eb22c58"
 TWILIO_TEST_TOKEN = "ded1abfef63b838da2159d1cc9d5f133"
