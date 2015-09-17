@@ -22,7 +22,5 @@ def sms_reply(request):
 def voice(request):
     r = Response()
     
-    r.say("Hello!")
-    r.pause(length=1)
-    r.say("Good bye!")
+    r.Reject()
     return r
