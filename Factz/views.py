@@ -17,3 +17,12 @@ def sms_reply(request):
     except:
         r.message("To sign up for PoopFactz go to www.PoopFactz.com")
     return r
+    
+@twilio_view
+def voice(request):
+    r = Response()
+    
+    r.say("Hello!")
+    r.pause(length=1)
+    r.say("Good bye!")
+    return r
