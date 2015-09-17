@@ -22,5 +22,5 @@ def sms_reply(request):
 def voice(request):
     r = Response()
     
-    r.Reject()
+    r.reject()
     return r
