@@ -1,6 +1,6 @@
 from django.db import models
 from Factz.do import rand_code, format_number
-from Factz.messaging import send_test_message
+#from Factz.messaging import send_test_message
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -45,9 +45,9 @@ class Number(models.Model):
     def save(self, *args, **kwargs):
         self.phone_number = format_number(self.phone_number)
         
-        chk = send_test_message(to_number=self.phone_number)
-        if chk[0] != 0:
-            raise ValueError(chk[1])
+        #chk = send_test_message(to_number=self.phone_number)
+        #if chk[0] != 0:
+        #    raise ValueError(chk[1])
 		
         super(Number, self).save(*args, **kwargs)
 		
