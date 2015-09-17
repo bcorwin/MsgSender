@@ -42,7 +42,7 @@ def send_confirmation_code(number_id, *args, **kwargs):
     # Sends the confirmation code using the number id
     msg = "Thank you for subscribing to PoopFactz. Your confirmation code is "
     msg += Number.objects.get(pk=number_id).confirmation_code
-    msg += ". Go to www.PoopFactz.com/Subscribe to recieve your message."
+    msg += ". Go to www.PoopFactz.com/Confirm to start receiving messages."
     to_number = Number.objects.get(pk=number_id).phone_number
     
     out = send_text(msg, to_number, *args, **kwargs)
