@@ -66,7 +66,9 @@ class activeSubscription(models.Model):
     
     class Meta:
         unique_together = ('number_id', 'subscription_id')
-        
+    
+    def __str__(self):
+        return str(self.number_id) + " " + str(self.subscription_id)
     #To do:
         # Add a function to confirm a number:
             # check if code = confirmation code
