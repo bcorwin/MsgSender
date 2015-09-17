@@ -1,6 +1,6 @@
 from django.db import models
-from Factz.do import rand_code, format_number
-#from Factz.messaging import send_test_message
+from Factz.utils import rand_code, format_number
+from Factz.messaging import send_test_message, send_confirmation_code
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -45,11 +45,12 @@ class Number(models.Model):
     def save(self, *args, **kwargs):
         self.phone_number = format_number(self.phone_number)
         
-        #chk = send_test_message(to_number=self.phone_number)
-        #if chk[0] != 0:
-        #    raise ValueError(chk[1])
-		
-        super(Number, self).save(*args, **kwargs)
+        chk = send_test_message(to_number=self.phone_number)
+        if chk[0] != 0:
+            raise ValueError(chk[1])
+        else:
+            super(Number, self).save(*args, **kwargs)
+            send_confirmation_code(self.id)
 		
     def __str__(self):
         return self.phone_number
@@ -66,7 +67,9 @@ class activeSubscription(models.Model):
     
     class Meta:
         unique_together = ('number_id', 'subscription_id')
-        
+    
+    def __str__(self):
+        return str(self.number_id) + " " + str(self.subscription_id)
     #To do:
         # Add a function to confirm a number:
             # check if code = confirmation code
