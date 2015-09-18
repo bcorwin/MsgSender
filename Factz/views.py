@@ -1,66 +1,56 @@
 from Factz.utils import format_number
-from Factz.do import confirm_code, number_exist
+from Factz.do import number_exist, add_number, toggle_active, sub_exist, next_message
 from django_twilio.decorators import twilio_view
 from twilio.twiml import Response
 from Factz.models import Number
-from django.http import HttpResponse
-from django.db import IntegrityError
 
 @twilio_view
 def sms_reply(request):
     if request.method == "POST":
         from_number = format_number(request.POST['From'])
+        msg = request.POST['Body']
     elif request.method == "GET":
         from_number = format_number(request.GET['From'])
+        msg = request.GET['Body']
         
     r = Response()
-    try:
-        cc = Number.objects.get(phone_number=from_number).confirmation_code
-        r.message("Your confirmation code: " + cc)
-    except:
-        r.message("To sign up for PoopFactz go to www.PoopFactz.com")
+    numObj = number_exist(from_number)
+    if numObj == None:
+        numObj = add_number(from_number)
+        # To do: look for "subscribe {SUB}" pattern
+        subObj = sub_exist("PoopFactz")
+        toggle_active(numObj, subObj, status=True)
+        r.message("Welcome to PoopFactz! Your first message is on its way.")
+    else:
+        pass
+    # To do:
+    ## Check if number in DB.
+    ### If not: if msg contains subscribe SUB, subscribe and activate them
+    ### If in, look for:
+    #### Source [SUB]-- send source for latest message sent
+    #### Unsubscribe -- Unsubscribe
+    #### More -- Tell them to wait
+    #### Help or Commands -- Send list of available commands
+    #### Otherwise send list of commands
     return r
     
 @twilio_view
 def voice(request):
     r = Response()
+    subObj = sub_exist("PoopFactz")
+    msgObj = next_message(subObj)
     
-    r.reject()
+    r.say(msgObj.message)
+    if msgObj.follow_up != None:
+        r.pause(length=2)
+        r.say(msgObj.follow_up)
+    r.pause(length=2)
+    r.say("Thank you for calling Poop Facts. To subscribe for daily text message go to www. Poop Facts .com")
+    r.pause(length=1)
+    r.say("Thats Poop Facts with a zee")
+    # To do:
+    ## Play a random message
+    ## Have the caller press 1 to subscribe to PoopFactz
+    
+    #r.reject()
     return r
-    
-def signup(request):
-    if request.method == "POST":
-        num = request.POST['Number']
-    elif request.method == "GET":
-        num = request.GET['Number']
-        
-    try:
-        num = format_number(num)
-    except ValueError:
-        return HttpResponse("Please enter a number in the format 555 555 5555.")
-    
-    try:
-        new = Number(phone_number=num)
-        new.save()
-    except IntegrityError:
-        return HttpResponse("You're already signed up!")
-    
-    return HttpResponse("Thanks for signing up! Your confirmation code is on its way.")
-    
-def confirm(request):
-    if request.method == "POST":
-        num = request.POST['Number']
-        code = request.POST['Code']
-    elif request.method == "GET":
-        num = request.GET['Number']
-        code = request.GET['Code']
-    try:
-        num = format_number(num)
-    except ValueError:
-        return HttpResponse("Please enter a number in the format 555 555 5555.")
-        
-    if number_exist(num):
-        out = confirm_code(code, phone_number=num)
-    else:
-        out = "You have not signed up. Please go to <a href='www.PoopFactz.com/signup'>www.PoopFactz.com/signup</a> to get started."
-    return HttpResponse(out)

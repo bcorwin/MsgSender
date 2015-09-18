@@ -14,3 +14,19 @@ def format_number(phone_number):
     else:
         raise ValueError(phone_number + " is not a valid phone number format.")
     return(out)
+    
+def extract_command(text, commands):
+    """
+    Loops through the list of commands and looks for the pattern
+    "COMMAND [PARAMETERS]" and outputs the first match it finds
+    """
+    out = (None, None)
+    for c in commands:
+        pattern = re.compile(c + " *(.*)", re.IGNORECASE)
+        if pattern.match(text):
+            parm = pattern.match(text).groups()[0]
+            out[0] = c
+            out[1] = parm if parm != '' else None
+            break
+    return out
+        
