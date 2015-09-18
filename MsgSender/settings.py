@@ -8,7 +8,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os
+import os,sys
+sys.path.append("C:\Anaconda\Lib\site-packages")
 import dj_database_url
 
 # Quick-start development settings - unsuitable for production

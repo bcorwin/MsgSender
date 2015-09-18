@@ -1,6 +1,6 @@
 from django.db import models
 from Factz.utils import rand_code, format_number
-from Factz.messaging import send_test_message, send_confirmation_code
+from Factz.messaging import send_test_message
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -23,7 +23,7 @@ class Message(models.Model):
     message = models.CharField(max_length=320)
     follow_up = models.CharField(max_length=160, blank=True, null=True)
     source = models.CharField(max_length=160, blank=True, null=True)
-    subscription_id = models.ForeignKey(Subscription)
+    subscription = models.ForeignKey(Subscription)
     count = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
@@ -50,15 +50,14 @@ class Number(models.Model):
             raise ValueError(chk[1])
         else:
             super(Number, self).save(*args, **kwargs)
-            send_confirmation_code(self.id)
 		
     def __str__(self):
         return self.phone_number
         
 class activeSubscription(models.Model):
-    number_id = models.ForeignKey(Number)
-    subscription_id = models.ForeignKey(Subscription)
-    message_id = models.ForeignKey(Message, blank=True, null=True)
+    number = models.ForeignKey(Number)
+    subscription = models.ForeignKey(Subscription)
+    message = models.ForeignKey(Message, blank=True, null=True, default=None)
     message_cnt = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
@@ -66,10 +65,10 @@ class activeSubscription(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ('number_id', 'subscription_id')
+        unique_together = ('number', 'subscription')
     
     def __str__(self):
-        return str(self.number_id) + " " + str(self.subscription_id)
+        return str(self.number) + " " + str(self.subscription) + " (" + self.active + ")"
     #To do:
         # Add a function to confirm a number:
             # check if code = confirmation code
