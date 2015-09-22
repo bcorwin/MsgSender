@@ -21,4 +21,5 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^sms/reply/{0,1}', views.sms_reply),
     url(r'^voice/{0,1}', views.voice),
+    url(r'^upload/{0,1}', views.upload),
 ]

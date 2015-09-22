@@ -1,8 +1,12 @@
 from Factz.utils import format_number
-from Factz.do import number_exist, add_number, toggle_active, sub_exist, next_message
+from Factz.do import number_exist, add_number, toggle_active, sub_exist, next_message, upload_file
 from django_twilio.decorators import twilio_view
 from twilio.twiml import Response
 from Factz.models import Number
+from Factz.forms import uploadFactz
+from django.shortcuts import render_to_response
+from django.http import HttpResponse
+from django.template.context_processors import csrf
 
 @twilio_view
 def sms_reply(request):
@@ -55,3 +59,17 @@ def voice(request):
     
     r.reject()
     return r
+    
+def upload(request):
+    if request.method == 'POST':
+        form = uploadFactz(request.POST, request.FILES)
+        if form.is_valid():
+            cd = form.cleaned_data
+            upload_file(request.FILES['file'], sub=cd['subscription'], overwrite=cd['overwrite'])
+            return HttpResponse("Success")
+        return HttpResponse("Fail")
+    else:
+        form = uploadFactz
+    out = {'form': form}
+    out.update(csrf(request))
+    return render_to_response('upload.html', out)

@@ -1,6 +1,8 @@
 from Factz.models import Number, Variable, Message, activeSubscription, Subscription
 from datetime import datetime
 from random import choice
+import csv
+from django.core.exceptions import ValidationError
 
 def get_value(varname):
     return Variable.objects.get(name=varname).val
@@ -66,3 +68,19 @@ def add_number(num):
         num = Number(phone_number=num)
         num.save()
     return num
+    
+def upload_file(f, sub, overwrite):
+    if overwrite == True:
+        Message.objects.filter(subscription=sub).delete()
+    csvreader = csv.reader(f.read().decode().splitlines())
+    header = True
+    for row in csvreader:
+        if header == True:
+            header = False
+            continue
+        msg = row[1]
+        follow_up = row[2]
+        source = row[3]
+        add = Message(message=msg, follow_up=follow_up, source=source, subscription=sub)
+        add.save()
+        
