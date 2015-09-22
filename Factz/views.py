@@ -1,5 +1,5 @@
 from Factz.utils import format_number
-from Factz.do import number_exist, add_number, toggle_active, sub_exist, next_message, upload_file
+from Factz.do import number_exist, add_number, toggle_active, sub_exist, next_message, upload_file, generate_reply
 from django_twilio.decorators import twilio_view
 from twilio.twiml import Response
 from Factz.models import Number
@@ -26,7 +26,8 @@ def sms_reply(request):
         toggle_active(numObj, subObj, status=True)
         r.message("Welcome to PoopFactz! Your first message is on its way.")
     else:
-        pass
+        reply = generate_reply(msg, numObj)
+        r.message(reply)
     # To do:
     ## Check if number in DB.
     ### If not: if msg contains subscribe SUB, subscribe and activate them

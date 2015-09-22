@@ -3,6 +3,7 @@ from datetime import datetime
 from random import choice
 import csv
 from django.core.exceptions import ValidationError
+from Factz.utils import extract_command
 
 def get_value(varname):
     return Variable.objects.get(name=varname).val
@@ -70,6 +71,9 @@ def add_number(num):
     return num
     
 def upload_file(f, sub, overwrite):
+    """
+    Reads a csv file (Format: ID, Message, Follow_up, Source) and adds to db.
+    """
     if overwrite == True:
         Message.objects.filter(subscription=sub).delete()
     csvreader = csv.reader(f.read().decode().splitlines())
@@ -84,3 +88,16 @@ def upload_file(f, sub, overwrite):
         add = Message(message=msg, follow_up=follow_up, source=source, subscription=sub)
         add.save()
         
+def generate_reply(message, numObj):
+    commands = ["subscribe", "unsubscribe"]
+    command, parm = extract_command(message, commands)
+    
+    if command == "subscribe":
+        subObj = sub_exist("PoopFactz")
+        toggle_active(numObj, subObj, status=True)
+        return "You're now subscribed to " + subObj.name + "."
+    elif command == "unsubscribe":
+        subObj = sub_exist("PoopFactz")
+        toggle_active(numObj, subObj, status=False)
+        return "You're now unsubscribed to " + subObj.name + "."
+    return "Unknown command."

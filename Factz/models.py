@@ -68,10 +68,4 @@ class activeSubscription(models.Model):
         unique_together = ('number', 'subscription')
     
     def __str__(self):
-        return str(self.number) + " " + str(self.subscription) + " (" + self.active + ")"
-    #To do:
-        # Add a function to confirm a number:
-            # check if code = confirmation code
-            # if so, move to Numbers and remove from Unconfirmed
-        #function to send confirmation to #
-        # Clean up unconfirmed numbers that have been in this db for > 1 day
+        return str(self.number) + " " + str(self.subscription) + " (" + str(self.active) + ")"
