@@ -23,4 +23,5 @@ urlpatterns = [
     url(r'^voice/{0,1}', views.voice),
     url(r'^upload/{0,1}', views.upload),
     url(r'^send/{0,1}', views.send),
+    url(r'^$', views.home),
 ]

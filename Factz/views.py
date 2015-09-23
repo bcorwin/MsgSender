@@ -86,3 +86,14 @@ def send(request):
     out = {'form': form}
     out.update(csrf(request))
     return render_to_response('send.html', out)
+    
+@staff_member_required
+def home(request):
+    out ={
+        'menu':{
+            "Admin": "/admin",
+            "Send to all":"/send",
+            "Upload":"/upload",
+        }
+    }
+    return render_to_response('home.html', out)
