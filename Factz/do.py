@@ -1,3 +1,4 @@
+#Use do to store functions that may depend on models
 from Factz.models import Number, Variable, Message, activeSubscription, Subscription
 from datetime import datetime
 from random import choice
@@ -8,18 +9,20 @@ from Factz.utils import extract_command
 def get_value(varname):
     return Variable.objects.get(name=varname).val
     
-def next_message(subscription_id):
-    today = datetime.now().date()
-    msg_set = Message.objects.all().filter(subscription=subscription_id)
-    msg_set = msg_set.filter(active=True)
+def next_message(subObj):
+    today = datetime.utcnow().date()
+    msg_set = Message.objects.all().filter(subscription=subObj, active=True)
     
-    min_date = min([m.last_sent.date() for m in msg_set if m.last_sent != None])
+    min_date = [m.last_sent.date() for m in msg_set if m.last_sent != None]
+    min_date = min(min_date) if len(min_date) >0 else today
     ages = [m.last_sent.date() if m.last_sent != None else min_date for m in msg_set]
-    ages = [(today - ls).days for ls in ages]
+    ages = [(today - ls).days + 1 for ls in ages]
     
     #randomly select an id given the above weights
     i = int(choice(''.join(str(i)*a for i,a in zip(range(len(msg_set)), ages))))
-    return msg_set[i]
+    res = msg_set[i]
+    res.update_sent()
+    return res
     
 def number_exist(phone_number):
     """
@@ -101,3 +104,21 @@ def generate_reply(message, numObj):
         toggle_active(numObj, subObj, status=False)
         return "You're now unsubscribed to " + subObj.name + "."
     return "Unknown command."
+    
+def send_to_all(subObj, msgObj=None):
+    '''
+    Sends a message to all phone numbers with active subscriptions for a given subscription.
+    '''
+    if msgObj == None:
+        msgObj = next_message(subObj)
+    user_list = activeSubscription.objects.filter(subscription=subObj, active=True)
+    success_cnt = 0
+    for user in user_list:
+        res = user.send(msgObj)
+        if res[0] == 0:
+            success_cnt += 1
+        print(res)
+    if success_cnt > 0:
+        msgObj.update_sent()
+        subObj.update_sent()
+    return success_cnt

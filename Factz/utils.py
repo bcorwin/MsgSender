@@ -1,3 +1,4 @@
+#Use utils to store functions that do not depend on models
 from random import sample
 import re
 
@@ -28,5 +29,4 @@ def extract_command(text, commands):
             out[0] = c
             out[1] = parm if parm != '' else None
             break
-    return out 
-        
+    return out

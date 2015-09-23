@@ -1,6 +1,7 @@
 from django.db import models
 from Factz.utils import rand_code, format_number
-from Factz.messaging import send_test_message
+from Factz.messaging import send_test_message, send_message
+from datetime import datetime
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -12,10 +13,16 @@ class Variable(models.Model):
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
+    count = models.IntegerField(default=0)
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
+    def update_sent(self):
+        self.last_sent = datetime.utcnow()
+        self.count += 1
+        self.save()
+        
     def __str__(self):
         return self.name
 
@@ -30,6 +37,11 @@ class Message(models.Model):
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
+    def update_sent(self):
+        self.count += 1
+        self.last_sent = datetime.utcnow()
+        self.save()
+    
     def __str__(self):
         return self.message
 
@@ -42,10 +54,15 @@ class Number(models.Model):
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
+    def update_sent(self):
+        self.last_sent = datetime.utcnow()
+        self.message_cnt += 1
+        self.save()
+    
     def save(self, *args, **kwargs):
         self.phone_number = format_number(self.phone_number)
         
-        chk = send_test_message(to_number=self.phone_number)
+        chk = send_test_message(self)
         if chk[0] != 0:
             raise ValueError(chk[1])
         else:
@@ -63,6 +80,22 @@ class activeSubscription(models.Model):
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    
+    def update_sent(self, msgObj):
+        self.message = msgObj
+        self.message_cnt += 1
+        self.last_sent = datetime.utcnow()
+        self.number.update_sent()
+        self.save()
+    
+    def send(self, msgObj):
+        if self.active == True:
+            res = send_message(msgObj, self)
+            if res[0] == 0:
+                self.update_sent(msgObj)
+        else:
+            res = (2, "Not active.")
+        return res
     
     class Meta:
         unique_together = ('number', 'subscription')
