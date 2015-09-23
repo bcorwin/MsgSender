@@ -16,11 +16,20 @@ def send_test_message(numObj):
     out = send_text("Test.", to_number, from_number, account_sid, auth_token)
     return(out)
 
-def send_message(msgObj, asObj):
+def send_message(msgObj, asObj, type="message"):
     '''
     Send a message to a number based on message and number ids.
     '''
-    msg = msgObj.message
+    type = type[0].upper()
+    if type == "M":
+        msg = msgObj.message
+    elif type == "F":
+        msg = msgObj.follow_up
+    elif type == "S":
+        msg = msgObj.source
+    else:
+        return (3, "Invalid type")
+        
     to_number = asObj.number.phone_number
     out = send_text(message=msg, to_number=to_number)
     return(out)
@@ -33,8 +42,10 @@ def send_text(message, to_number, from_number=settings.TWILIO_LIVE_NUMBER, accou
         client = TwilioRestClient(account_sid, auth_token)
         sms = client.messages.create(body=message, to=to_number, from_=from_number)
         out = (0, "Success")
+        if from_number == settings.TWILIO_TEST_NUMBER:
+            print(sms.to + ":" + sms.body)
     except twilio.TwilioRestException as e:
         out = (e.code, e.msg)
-    #except:
-    #    out = (1, "Unknown error")
+    except:
+        out = (1, "Unknown error")
     return(out)

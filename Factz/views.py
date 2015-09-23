@@ -1,8 +1,7 @@
 from Factz.utils import format_number
-from Factz.do import number_exist, add_number, toggle_active, sub_exist, next_message, upload_file, generate_reply
+from Factz.do import number_exist, add_number, toggle_active, sub_exist, upload_file, generate_reply
 from django_twilio.decorators import twilio_view
 from twilio.twiml import Response
-from Factz.models import Number
 from Factz.forms import uploadFactz
 from django.shortcuts import render_to_response
 from django.http import HttpResponse

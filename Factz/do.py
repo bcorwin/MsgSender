@@ -3,7 +3,6 @@ from Factz.models import Number, Variable, Message, activeSubscription, Subscrip
 from datetime import datetime
 from random import choice
 import csv
-from django.core.exceptions import ValidationError
 from Factz.utils import extract_command
 
 def get_value(varname):
@@ -117,7 +116,6 @@ def send_to_all(subObj, msgObj=None):
         res = user.send(msgObj)
         if res[0] == 0:
             success_cnt += 1
-        print(res)
     if success_cnt > 0:
         msgObj.update_sent()
         subObj.update_sent()

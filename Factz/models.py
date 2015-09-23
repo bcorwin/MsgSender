@@ -1,7 +1,7 @@
 from django.db import models
 from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message
-from datetime import datetime
+from django.utils import timezone
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -19,7 +19,7 @@ class Subscription(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     
     def update_sent(self):
-        self.last_sent = datetime.utcnow()
+        self.last_sent = timezone.now()
         self.count += 1
         self.save()
         
@@ -39,7 +39,7 @@ class Message(models.Model):
     
     def update_sent(self):
         self.count += 1
-        self.last_sent = datetime.utcnow()
+        self.last_sent = timezone.now()
         self.save()
     
     def __str__(self):
@@ -55,18 +55,16 @@ class Number(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     
     def update_sent(self):
-        self.last_sent = datetime.utcnow()
+        self.last_sent = timezone.now()
         self.message_cnt += 1
         self.save()
     
-    def save(self, *args, **kwargs):
+    def create(self, *args, **kwargs):
         self.phone_number = format_number(self.phone_number)
         
         chk = send_test_message(self)
         if chk[0] != 0:
             raise ValueError(chk[1])
-        else:
-            super(Number, self).save(*args, **kwargs)
 		
     def __str__(self):
         return self.phone_number
@@ -84,7 +82,7 @@ class activeSubscription(models.Model):
     def update_sent(self, msgObj):
         self.message = msgObj
         self.message_cnt += 1
-        self.last_sent = datetime.utcnow()
+        self.last_sent = timezone.now()
         self.number.update_sent()
         self.save()
     
@@ -93,6 +91,8 @@ class activeSubscription(models.Model):
             res = send_message(msgObj, self)
             if res[0] == 0:
                 self.update_sent(msgObj)
+                if msgObj.follow_up != None:
+                    send_message(msgObj, self, type="followup")
         else:
             res = (2, "Not active.")
         return res
