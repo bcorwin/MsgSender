@@ -91,6 +91,13 @@ def upload_file(f, sub, overwrite):
         add.save()
         
 def generate_reply(message, numObj):
+    # To do:
+    ## Source [SUB]-- send source for latest message sent
+    ## Unsubscribe -- Unsubscribe
+    ### Need extract sub(s) from message
+    ## Help or Commands -- Send list of available commands
+    ## Otherwise do what?
+    
     commands = ["subscribe", "unsubscribe"]
     command, parm = extract_command(message, commands)
     

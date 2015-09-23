@@ -25,18 +25,10 @@ def sms_reply(request):
         subObj = sub_exist("PoopFactz")
         toggle_active(numObj, subObj, status=True)
         r.message("Welcome to PoopFactz! Your first message is on its way.")
+        # To do: send last message that was sent for newly subscribed sub?
     else:
         reply = generate_reply(msg, numObj)
         r.message(reply)
-    # To do:
-    ## Check if number in DB.
-    ### If not: if msg contains subscribe SUB, subscribe and activate them
-    ### If in, look for:
-    #### Source [SUB]-- send source for latest message sent
-    #### Unsubscribe -- Unsubscribe
-    #### More -- Tell them to wait
-    #### Help or Commands -- Send list of available commands
-    #### Otherwise send list of commands
     return r
     
 @twilio_view
