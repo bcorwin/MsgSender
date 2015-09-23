@@ -34,15 +34,17 @@ def sms_reply(request):
 @twilio_view
 def voice(request):
     r = Response()
-    subObj = sub_exist("PoopFactz")
-    msgObj = next_message(subObj, update=False)
+    #subObj = sub_exist("PoopFactz")
+    #msgObj = next_message(subObj, update=False)
     
-    r.say(msgObj.message)
-    if msgObj.follow_up != None:
-        r.pause(length=2)
-        r.say(msgObj.follow_up)
-    r.pause(length=2)
-    r.say("Thank you for calling Poop Facts. To subscribe for daily text message go to www dot Poop Facts dot com. That's Poop Facts with a zee")
+    #r.say(msgObj.message)
+    #if msgObj.follow_up != None:
+    #    r.pause(length=2)
+    #    r.say(msgObj.follow_up)
+    #r.pause(length=2)
+    #r.say("Thank you for calling Poop Facts. To subscribe for daily text message go to www dot Poop Facts dot com.")
+    #r.pause(length=1)
+    #r.say("That's Poop Facts with a zee")
     
     # To do:
     ## Have the caller press 1 to subscribe to PoopFactz
