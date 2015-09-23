@@ -8,7 +8,7 @@ from Factz.utils import extract_command
 def get_value(varname):
     return Variable.objects.get(name=varname).val
     
-def next_message(subObj):
+def next_message(subObj, update=True):
     today = datetime.utcnow().date()
     msg_set = Message.objects.all().filter(subscription=subObj, active=True)
     
@@ -20,7 +20,8 @@ def next_message(subObj):
     #randomly select an id given the above weights
     i = int(choice(''.join(str(i)*a for i,a in zip(range(len(msg_set)), ages))))
     res = msg_set[i]
-    res.update_sent()
+    if update==True:
+        res.update_sent()
     return res
     
 def number_exist(phone_number):

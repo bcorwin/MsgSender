@@ -1,5 +1,5 @@
 from Factz.utils import format_number
-from Factz.do import number_exist, add_number, toggle_active, sub_exist, upload_file, generate_reply, send_to_all
+from Factz.do import number_exist, add_number, toggle_active, sub_exist, upload_file, generate_reply, send_to_all, next_message
 from Factz.forms import uploadFactz, sendForm
 from django_twilio.decorators import twilio_view
 from django.contrib.admin.views.decorators import staff_member_required
@@ -34,20 +34,17 @@ def sms_reply(request):
 @twilio_view
 def voice(request):
     r = Response()
-#    subObj = sub_exist("PoopFactz")
-#    msgObj = next_message(subObj)
-#    
-#    r.say(msgObj.message)
-#    if msgObj.follow_up != None:
-#        r.pause(length=2)
-#        r.say(msgObj.follow_up)
-#    r.pause(length=2)
-#    r.say("Thank you for calling Poop Facts. To subscribe for daily text message go to www. Poop Facts .com")
-#    r.pause(length=1)
-#    r.say("Thats Poop Facts with a zee")
+    subObj = sub_exist("PoopFactz")
+    msgObj = next_message(subObj, update=False)
+    
+    r.say(msgObj.message)
+    if msgObj.follow_up != None:
+        r.pause(length=2)
+        r.say(msgObj.follow_up)
+    r.pause(length=2)
+    r.say("Thank you for calling Poop Facts. To subscribe for daily text message go to www dot Poop Facts dot com. That's Poop Facts with a zee")
     
     # To do:
-    ## Play a random message
     ## Have the caller press 1 to subscribe to PoopFactz
     
     r.reject()
