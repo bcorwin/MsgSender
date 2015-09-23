@@ -1,11 +1,12 @@
 from Factz.utils import format_number
-from Factz.do import number_exist, add_number, toggle_active, sub_exist, upload_file, generate_reply
+from Factz.do import number_exist, add_number, toggle_active, sub_exist, upload_file, generate_reply, send_to_all
+from Factz.forms import uploadFactz, sendForm
 from django_twilio.decorators import twilio_view
-from twilio.twiml import Response
-from Factz.forms import uploadFactz
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.template.context_processors import csrf
+from twilio.twiml import Response
 
 @twilio_view
 def sms_reply(request):
@@ -60,6 +61,7 @@ def voice(request):
     r.reject()
     return r
     
+@staff_member_required
 def upload(request):
     if request.method == 'POST':
         form = uploadFactz(request.POST, request.FILES)
@@ -67,9 +69,29 @@ def upload(request):
             cd = form.cleaned_data
             upload_file(request.FILES['file'], sub=cd['subscription'], overwrite=cd['overwrite'])
             return HttpResponse("Success")
-        return HttpResponse("Fail")
+        return HttpResponse("Fail" + str(form.errors))
     else:
         form = uploadFactz
     out = {'form': form}
     out.update(csrf(request))
     return render_to_response('upload.html', out)
+    
+@staff_member_required
+def send(request):
+    if request.method == 'POST':
+        form = sendForm(request.POST, request.FILES)
+        if form.is_valid():
+            cd = form.cleaned_data
+            sub = cd['subscription']
+            msg = cd['message']
+            if msg != None:
+                if msg.subscription != sub:
+                    return HttpResponse("Fail. Be sure to select a message that is for the selected subscription")
+            send_to_all(sub, msgObj=msg)
+            return HttpResponse("Success")
+        return HttpResponse("Fail" + str(form.errors))
+    else:
+        form = sendForm
+    out = {'form': form}
+    out.update(csrf(request))
+    return render_to_response('send.html', out)
