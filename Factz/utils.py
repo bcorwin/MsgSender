@@ -1,3 +1,4 @@
+#Use utils to store functions that do not depend on models
 from random import sample
 import re
 
@@ -20,7 +21,7 @@ def extract_command(text, commands):
     Loops through the list of commands and looks for the pattern
     "COMMAND [PARAMETERS]" and outputs the first match it finds
     """
-    out = (None, None)
+    out = [None, None]
     for c in commands:
         pattern = re.compile(c + " *(.*)", re.IGNORECASE)
         if pattern.match(text):
@@ -29,4 +30,3 @@ def extract_command(text, commands):
             out[1] = parm if parm != '' else None
             break
     return out
-        
