@@ -4,6 +4,7 @@ from datetime import datetime
 from random import choice
 import csv
 from Factz.utils import extract_command
+from django.core.exceptions import ValidationError
 
 def get_value(varname):
     return Variable.objects.get(name=varname).val
@@ -77,6 +78,7 @@ def upload_file(f, sub, overwrite):
     """
     Reads a csv file (Format: ID, Message, Follow_up, Source) and adds to db.
     """
+    out = {"New":[], "Fail":[], "Updated":[], "Nochange":[]}
     if overwrite == True:
         Message.objects.filter(subscription=sub).delete()
     csvreader = csv.reader(f.read().decode().splitlines())
@@ -85,12 +87,58 @@ def upload_file(f, sub, overwrite):
         if header == True:
             header = False
             continue
+        sheet_id = int(row[0])
         msg = row[1]
         follow_up = row[2]
         source = row[3]
-        add = Message(message=msg, follow_up=follow_up, source=source, subscription=sub)
-        add.save()
+
+        msgObj =  Message.objects.filter(sheet_id=sheet_id)
+        if msgObj.exists():
+            msgObj = msgObj.get()
+            changes = {
+                "message":find_change(msg, msgObj.message),
+                "follow_up":find_change(follow_up, msgObj.follow_up),
+                "source":find_change(source, msgObj.source),
+            }
+            if make_changes(msgObj, changes) == True:
+                out = validate_save_append(msgObj, out, name="Updated", addl=changes)
+            else:
+                out["Nochange"].append(msgObj)
+        else:
+            add = Message(sheet_id=sheet_id, message=msg, follow_up=follow_up, source=source, subscription=sub)
+            out = validate_save_append(add, out)
+    return out
+
+def make_changes(obj, changes):
+    '''
+    Makes changes to obj. If no changes, return False, else return True
+    '''
+    out = False
+    for c in changes:
+        if changes[c] != None:
+            setattr(obj, c, changes[c][1])
+            out = True
+    return out
+
+def find_change(new, old):
+    '''
+    Compares two values. If they are the same, return None. If not return a tuple as (old, new)  
+    '''
+    return (old, new) if new != old else None
         
+def validate_save_append(obj, out, name="New", addl=None):
+    '''
+    Validates an object. If it's good, save it and return out[name] with an additional entry as (obj, addl).
+    If not, return out["Fail"] with an additional entry as (obj, the error)
+    '''
+    try:
+        obj.full_clean()
+        obj.save()
+        out[name].append((obj, addl))
+    except ValidationError as e:
+        out["Fail"].append((obj, e))
+    return out
+    
 def generate_reply(message, numObj):
     # To do:
     ## Source [SUB]-- send source for latest message sent

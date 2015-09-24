@@ -58,8 +58,8 @@ def upload(request):
         form = uploadFactz(request.POST, request.FILES)
         if form.is_valid():
             cd = form.cleaned_data
-            upload_file(request.FILES['file'], sub=cd['subscription'], overwrite=cd['overwrite'])
-            return HttpResponse("Success")
+            res = upload_file(request.FILES['file'], sub=cd['subscription'], overwrite=cd['overwrite'])
+            return render_to_response('upload_results.html', res)
         return HttpResponse("Fail" + str(form.errors))
     else:
         form = uploadFactz

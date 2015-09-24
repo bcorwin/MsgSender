@@ -1,0 +1,34 @@
+<html>
+    {% if Fail %}
+        <H2>Failed:</h2>
+        {% for msg in Fail %}
+            <h3>({{msg.0.sheet_id}}) {{msg.0}}</h3>
+            {% for value in msg.1 %}
+                <li>{{value.0}}: {{value.1}}</li>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    {% if Updated %}
+        <h2>Updated:</h2>
+        {% for msg in Updated %}
+            <h3>({{msg.0.sheet_id}}) {{msg.0}}</h3>
+            {% for key,value in msg.1.items %}
+                {% if value.0 %}
+                    <li>{{key}}: "{{value.0}}" to "{{value.1}}"</li>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    {% if New %}
+        <h2>New:</h2>
+        {% for msg in New %}
+            <li>({{msg.0.sheet_id}}) {{msg.0}}</li>
+        {% endfor %}
+    {% endif %}
+    {% if Nochange %}
+        <h2>No Change:</h2>
+        {% for msg in Nochange %}
+            <li>({{msg.sheet_id}}) {{msg}}</li>
+        {% endfor %}
+    {% endif %}
+</html>

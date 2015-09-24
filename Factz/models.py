@@ -27,6 +27,7 @@ class Subscription(models.Model):
         return self.name
 
 class Message(models.Model):
+    sheet_id = models.IntegerField()
     message = models.CharField(max_length=320)
     follow_up = models.CharField(max_length=160, blank=True, null=True)
     source = models.CharField(max_length=160, blank=True, null=True)
@@ -44,6 +45,9 @@ class Message(models.Model):
     
     def __str__(self):
         return self.message
+        
+    class Meta:
+        unique_together = ('sheet_id', 'subscription')
 
 class Number(models.Model):
     phone_number = models.CharField(max_length=15, unique=True)
