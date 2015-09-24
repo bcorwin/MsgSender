@@ -164,15 +164,20 @@ def send_to_all(subObj, msgObj=None):
     '''
     Sends a message to all phone numbers with active subscriptions for a given subscription.
     '''
+    texts = []
     if msgObj == None:
         msgObj = next_message(subObj)
     user_list = activeSubscription.objects.filter(subscription=subObj, active=True)
     success_cnt = 0
     for user in user_list:
+        add = {"Number":user}
         res = user.send(msgObj)
-        if res[0] == 0:
+        if res["Message"][0] == 0:
             success_cnt += 1
+        add.update(res)
+        texts.append(add)
     if success_cnt > 0:
         msgObj.update_sent()
         subObj.update_sent()
-    return success_cnt
+    out = {"texts":texts, "msgObj":msgObj}
+    return out

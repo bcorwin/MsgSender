@@ -96,10 +96,15 @@ class activeSubscription(models.Model):
             if res[0] == 0:
                 self.update_sent(msgObj)
                 if msgObj.follow_up != None:
-                    send_message(msgObj, self, type="followup")
+                    f_res = send_message(msgObj, self, type="followup")
+                else:
+                    f_res = (-2, "No follow up.")
+            else:
+                f_res = (4, "Message failed, did not attempt.")
         else:
-            res = (2, "Not active.")
-        return res
+            res = (-1, "Not active.")
+            f_res = res
+        return {"Message":res, "Followup":f_res}
     
     class Meta:
         unique_together = ('number', 'subscription')

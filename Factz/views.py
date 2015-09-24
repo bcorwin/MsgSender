@@ -78,8 +78,8 @@ def send(request):
             if msg != None:
                 if msg.subscription != sub:
                     return HttpResponse("Fail. Be sure to select a message that is for the selected subscription")
-            send_to_all(sub, msgObj=msg)
-            return HttpResponse("Success")
+            res = send_to_all(sub, msgObj=msg)
+            return render_to_response('send_results.html', res)
         return HttpResponse("Fail" + str(form.errors))
     else:
         form = sendForm
