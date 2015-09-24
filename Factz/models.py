@@ -95,7 +95,7 @@ class activeSubscription(models.Model):
             res = send_message(msgObj, self)
             if res[0] == 0:
                 self.update_sent(msgObj)
-                if msgObj.follow_up != None:
+                if msgObj.follow_up not in ('', None):
                     f_res = send_message(msgObj, self, type="followup")
                 else:
                     f_res = (-2, "No follow up.")
