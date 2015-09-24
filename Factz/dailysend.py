@@ -12,11 +12,11 @@ def dailysend():
     active_subs = Subscription.objects.all().filter(active=True)
     active_subs = active_subs.filter(Q(last_sent__lt=now.date())|Q(last_sent=None))
 
-    #Pick up any blank/old sends and set next send between 16-24 UTC today
+    #Pick up any blank/old sends and set next send between 16-23:45 UTC today
     update_subs = active_subs.filter(Q(next_send__lt=now.date())|Q(next_send=None))
     for S in update_subs:
         next_send = datetime(now.year,now.month,now.day)
-        delay = randint(57600,85800)
+        delay = randint(57600,85500)
         S.next_send = next_send + timedelta(0,delay)
         S.save()
 
