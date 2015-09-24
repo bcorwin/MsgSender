@@ -16,7 +16,7 @@ def dailysend():
     update_subs = active_subs.filter(Q(next_send__lt=now.date())|Q(next_send=None))
     for S in update_subs:
         next_send = datetime(now.year,now.month,now.day)
-        delay = randint(57600,86400)
+        delay = randint(57600,85800)
         S.next_send = next_send + timedelta(0,delay)
         S.save()
 
