@@ -30,7 +30,7 @@ class Message(models.Model):
     message = models.CharField(max_length=320)
     follow_up = models.CharField(max_length=160, blank=True, null=True)
     source = models.CharField(max_length=160, blank=True, null=True)
-    subscription = models.ForeignKey(Subscription)
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
     count = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
@@ -70,9 +70,9 @@ class Number(models.Model):
         return self.phone_number
         
 class activeSubscription(models.Model):
-    number = models.ForeignKey(Number)
-    subscription = models.ForeignKey(Subscription)
-    message = models.ForeignKey(Message, blank=True, null=True, default=None)
+    number = models.ForeignKey(Number, on_delete=models.PROTECT)
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
+    message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.SET_NULL)
     message_cnt = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
