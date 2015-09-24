@@ -15,6 +15,7 @@ class Subscription(models.Model):
     active = models.BooleanField(default=True)
     count = models.IntegerField(default=0)
     last_sent = models.DateTimeField(null=True, blank=True)
+    next_send = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
