@@ -23,17 +23,19 @@ def dailysend():
         send_delay = S.wait_seconds()
         end_time = start_time + send_delay
         if end_time > 85500: end_time = 85500 #Never send after 23:45 UTC
-        delay = randint(start_time,end_time)
-
-        next_send = datetime(now.year,now.month,now.day)
-        S.next_send = next_send + timedelta(0,delay)
+        delay = randint(start_time,end_time) #Delay in seconds
+        
+        hours = delay//3600
+        remainder = delay%3600
+        minutes = remainder//60
+        S.next_send = datetime(now.year,now.month,now.day,hours,minutes)
         S.save()
 
     #Filter to records where next_send is today and is in the past
     send_subs = active_subs.filter(next_send__gte=now.date())
     send_subs = send_subs.filter(next_send__lt=now)
     for S in send_subs:
-        #do.send_to_all(S)
+        #do.send_to_all(S) #Keep those commented until the scheduler works
         S.next_send = None
         S.save()
 
