@@ -19,7 +19,7 @@ class numberAdmin(admin.ModelAdmin):
     list_display = ['phone_number', 'last_sent']
 
 class subAdmin(admin.ModelAdmin):
-    list_display = ['name', 'last_sent', 'next_send']
+    list_display = ['name', 'last_sent', 'next_send', 'active']
     
 class varAdmin(admin.ModelAdmin):
     list_display = ['name', 'val']
