@@ -1,34 +1,42 @@
 import Factz.do as do
-import Factz.messaging as messaging
-from Factz.models import Subscription, activeSubscription
-from datetime import datetime
-    
-def dailysend():
-    
-    subs = Subscription.objects.all().filter(active=True)
-    subs = subs.filter(last_sent__lt=datetime.now().date())
-    #determine send time and wait
-    
-    for S in subs:
-        
-        msg = None          
-        msg = do.next_message(S)
-        
-        act_subs = None
-        act_subs = activeSubscription.objects.all().filter(subscription_id=S).filter(active=True)
+from Factz.models import Subscription
+from django.db.models import Q
+from datetime import datetime, timedelta
+from random import randint
 
-        for A in act_subs:
-            
-            num = None            
-            num = A.number_id
-            
-            val = None
-            val = messaging.send_message(msg,num)
-            
-            if val[0] == 1:
-                A.message_id = msg
-                A.message_cnt += 1
-                A.last_sent = datetime.now()
-                num.last_sent = datetime.now()
-    
-    return()
+def dailysend():
+
+    now = datetime.now()
+
+    #Fetch active subscriptions not sent today (UTC)
+    active_subs = Subscription.objects.all().filter(active=True)
+    active_subs = active_subs.filter(Q(last_sent__lt=now.date())|Q(last_sent=None))
+
+    #Pick up any blank/old sends and set next_send
+    update_subs = active_subs.filter(Q(next_send__lt=now.date())|Q(next_send=None))
+    for S in update_subs:
+        #First, quit if today is invalid for the subscription
+        if not S.check_today(): break
+
+        #Default start time/duration -> 16:00 - 23:45 UTC
+        start_time = S.start_time()
+        send_delay = S.wait_seconds()
+        end_time = start_time + send_delay
+        if end_time > 85500: end_time = 85500 #Never send after 23:45 UTC
+        delay = randint(start_time,end_time) #Delay in seconds
+        
+        hours = delay//3600
+        remainder = delay%3600
+        minutes = remainder//60
+        S.next_send = datetime(now.year,now.month,now.day,hours,minutes)
+        S.save()
+
+    #Filter to records where next_send is today and is in the past
+    send_subs = active_subs.filter(next_send__gte=now.date())
+    send_subs = send_subs.filter(next_send__lt=now)
+    for S in send_subs:
+        #do.send_to_all(S) #Keep those commented until the scheduler works
+        S.next_send = None
+        S.save()
+
+    return(None)
