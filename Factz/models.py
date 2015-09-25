@@ -3,6 +3,7 @@ from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message
 from django.utils import timezone
 from datetime import datetime
+from time import sleep
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -139,6 +140,7 @@ class activeSubscription(models.Model):
             if res[0] == 0:
                 self.update_sent(msgObj)
                 if msgObj.follow_up not in ('', None):
+                    sleep(1)
                     f_res = send_message(msgObj, self, type="followup")
                 else:
                     f_res = (-2, "No follow up.")
