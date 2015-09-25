@@ -190,7 +190,7 @@ def email_send_results(staOutput):
     
     subject = msgObj.subscription.name + " sent!"
     from_email = get_value("from_email")
-    to = get_value("to_emails")
+    to = get_value("to_emails").split(",")
     
     text_content = 'Send to all results:'
     html_content = render_to_string('send_results.html', staOutput)
