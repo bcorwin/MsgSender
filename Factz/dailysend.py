@@ -35,7 +35,7 @@ def dailysend():
     send_subs = active_subs.filter(next_send__gte=now.date())
     send_subs = send_subs.filter(next_send__lt=now)
     for S in send_subs:
-        #do.send_to_all(S) #Keep those commented until the scheduler works
+        do.send_to_all(S)
         S.next_send = None
         S.save()
 
