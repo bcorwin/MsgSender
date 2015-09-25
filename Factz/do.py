@@ -5,6 +5,8 @@ from random import choice
 import csv
 from Factz.utils import extract_command
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 def get_value(varname):
     return Variable.objects.get(name=varname).val
@@ -180,4 +182,18 @@ def send_to_all(subObj, msgObj=None):
         msgObj.update_sent()
         subObj.update_sent()
     out = {"texts":texts, "msgObj":msgObj}
+    email_send_results(out)
     return out
+    
+def email_send_results(staOutput):
+    msgObj = staOutput["msgObj"]
+    
+    subject = msgObj.subscription.name + " sent!"
+    from_email = get_value("from_email")
+    to = get_value("to_emails")
+    
+    text_content = 'Send to all results:'
+    html_content = render_to_string('send_results.html', staOutput)
+    msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()

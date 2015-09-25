@@ -133,3 +133,6 @@ try:
     from .local_settings import *
 except ImportError:
     pass
+
+    
+EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
