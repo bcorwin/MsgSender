@@ -2,6 +2,7 @@
 import twilio
 from twilio.rest import TwilioRestClient
 from django.conf import settings
+from time import sleep
 
 def send_test_message(numObj):
     """
@@ -44,6 +45,7 @@ def send_text(message, to_number, from_number=settings.TWILIO_LIVE_NUMBER, accou
         out = (0, "Success")
         if from_number == settings.TWILIO_TEST_NUMBER:
             print(sms.to + ":" + sms.body)
+        sleep(1)
     except twilio.TwilioRestException as e:
         out = (e.code, e.msg)
     except:
