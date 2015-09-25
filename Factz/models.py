@@ -19,8 +19,12 @@ class Subscription(models.Model):
     next_send = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    
+    #Revamp: add end_time and auto-caluclate send_delay
     send_base = models.TimeField(default=datetime(1,1,1,16))
     send_delay = models.PositiveIntegerField(default=465)
+
+    #Could we use a text field with validation instead?
     send_monday = models.BooleanField(default=True)
     send_tuesday = models.BooleanField(default=True)
     send_wednesday = models.BooleanField(default=True)
