@@ -2,6 +2,7 @@ from django.db import models
 from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message
 from django.utils import timezone
+from datetime import datetime
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -18,7 +19,44 @@ class Subscription(models.Model):
     next_send = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    send_base = models.TimeField(default=datetime(1,1,1,16))
+    send_delay = models.PositiveIntegerField(default=465)
+    send_monday = models.BooleanField(default=True)
+    send_tuesday = models.BooleanField(default=True)
+    send_wednesday = models.BooleanField(default=True)
+    send_thursday = models.BooleanField(default=True)
+    send_friday = models.BooleanField(default=True)
+    send_saturday = models.BooleanField(default=True)
+    send_sunday = models.BooleanField(default=True)
     
+    def wait_seconds(self):
+        val = self.send_delay*60
+        return(val)
+    
+    def start_time(self):
+        hours = self.send_base.hour
+        minutes = self.send_base.minute
+        val = (hours*60+minutes)*60
+        return(val)
+    
+    def check_today(self):
+        today = datetime.today().weekday()
+        if today == 0:
+            val = self.send_monday
+        elif today == 1:
+            val = self.send_tuesday
+        elif today == 2:
+            val = self.send_wednesday
+        elif today == 3:
+            val = self.send_thursday
+        elif today == 4:
+            val = self.send_friday
+        elif today == 5:
+            val = self.send_saturday
+        elif today == 6:
+            val = self.send_sunday
+        return(val)
+
     def update_sent(self):
         self.last_sent = timezone.now()
         self.count += 1
