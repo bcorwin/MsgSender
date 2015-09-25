@@ -1,12 +1,12 @@
 import Factz.do as do
 from Factz.models import Subscription
 from django.db.models import Q
-from datetime import datetime, timedelta
+from django.utils import timezone
 from random import randint
 
 def dailysend():
 
-    now = datetime.now()
+    now = timezone.now()
 
     #Fetch active subscriptions not sent today (UTC)
     active_subs = Subscription.objects.all().filter(active=True)
@@ -30,7 +30,7 @@ def dailysend():
         minutes = remainder//60
         S.next_send = datetime(now.year,now.month,now.day,hours,minutes)
         S.save()
-
+    
     #Filter to records where next_send is today and is in the past
     send_subs = active_subs.filter(next_send__gte=now.date())
     send_subs = send_subs.filter(next_send__lt=now)
