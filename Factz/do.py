@@ -173,7 +173,7 @@ def send_to_all(subObj, msgObj=None):
     success_cnt = 0
     for user in user_list:
         add = {"Number":user}
-        res = user.send(msgObj)
+        res = user.send_message(msgObj)
         if res["Message"][0] == 0:
             success_cnt += 1
         add.update(res)
@@ -181,6 +181,21 @@ def send_to_all(subObj, msgObj=None):
     if success_cnt > 0:
         msgObj.update_sent()
         subObj.update_sent()
+        
+    #Send follow ups
+    for text in texts:
+        errCode = text["Message"][0]
+        asObj = text["Number"]
+        
+        if msgObj.follow_up in ('', None):
+            text.update({"Followup":(-2, "No follow up.")})
+        elif errCode == 0:
+            #Only send the follow up if the the message was sucessful
+            f_res = asObj.send_follow_up(msgObj)
+            text.update(f_res)
+        else:
+            text.update({"Followup":(4, "Message failed, did not attempt.")})
+        
     out = {"texts":texts, "msgObj":msgObj}
     email_send_results(out)
     return out

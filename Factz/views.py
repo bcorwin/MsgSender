@@ -1,5 +1,5 @@
 from Factz.utils import format_number
-from Factz.do import number_exist, add_number, toggle_active, sub_exist, upload_file, generate_reply, send_to_all, next_message
+from Factz.do import number_exist, add_number, toggle_active, sub_exist, upload_file, generate_reply, send_to_all
 from Factz.forms import uploadFactz, sendForm
 from django_twilio.decorators import twilio_view
 from django.contrib.admin.views.decorators import staff_member_required

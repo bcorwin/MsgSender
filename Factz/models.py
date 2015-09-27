@@ -133,21 +133,23 @@ class activeSubscription(models.Model):
         self.number.update_sent()
         self.save()
     
-    def send(self, msgObj):
+    def send_message(self, msgObj):
         if self.active == True:
             res = send_message(msgObj, self)
             if res[0] == 0:
                 self.update_sent(msgObj)
-                if msgObj.follow_up not in ('', None):
-                    f_res = send_message(msgObj, self, type="followup")
-                else:
-                    f_res = (-2, "No follow up.")
-            else:
-                f_res = (4, "Message failed, did not attempt.")
         else:
             res = (-1, "Not active.")
-            f_res = res
-        return {"Message":res, "Followup":f_res}
+        return {"Message":res}
+    
+    def send_follow_up(self, msgObj):
+        if self.active == True and msgObj.follow_up not in ('', None):
+            res = send_message(msgObj, self, type="followup")
+        elif self.active != True:
+            res = (-1, "Not active.")
+        else:
+            res = (-2, "No follow up.")
+        return {"Followup":res}
     
     class Meta:
         unique_together = ('number', 'subscription')
