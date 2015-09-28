@@ -149,7 +149,7 @@ def generate_reply(message, numObj):
     ## Help or Commands -- Send list of available commands
     ## Otherwise do what?
     
-    commands = ["subscribe", "unsubscribe"]
+    commands = ["subscribe", "unsubscribe", "source"]
     command, parm = extract_command(message, commands)
     
     if command == "subscribe":
@@ -160,6 +160,17 @@ def generate_reply(message, numObj):
         subObj = sub_exist("PoopFactz")
         toggle_active(numObj, subObj, status=False)
         return "You're now unsubscribed to " + subObj.name + "."
+    elif command == "source":
+        subObj = sub_exist("PoopFactz")
+        asObj = activeSubscription.objects.filter(number=numObj, subscription=subObj)
+        if asObj.exists():
+            asObj = asObj.get()
+            if asObj.message is not None:
+                return asObj.message.source
+            else:
+                return "You have yet to recieve a fact from " + subObj.name + "."
+        else:
+            return "You are not subscribed to " + subObj.name + "."
     return "Unknown command."
     
 def send_to_all(subObj, msgObj=None):
