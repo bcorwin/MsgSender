@@ -1,5 +1,5 @@
 from django.contrib import admin
-from Factz.models import Variable, Message, Subscription, Number, activeSubscription
+from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage
 
 def set_active(modeladmin, request, queryset):
     queryset.update(active=True)
@@ -23,9 +23,13 @@ class subAdmin(admin.ModelAdmin):
     
 class varAdmin(admin.ModelAdmin):
     list_display = ['name', 'val']
+    
+class smAdmin(admin.ModelAdmin):
+    list_display = ['scheduled_time', 'actual_time', 'message']
 
 admin.site.register(Message, messageAdmin)
 admin.site.register(Number, numberAdmin)
 admin.site.register(Subscription, subAdmin)
 admin.site.register(Variable, varAdmin)
 admin.site.register(activeSubscription, activeSubAdmin)
+admin.site.register(sentMessage, smAdmin)

@@ -9,7 +9,7 @@ class Variable(models.Model):
     val = models.CharField(max_length=128)
     
     def __str__(self):
-        return self.name + "=" + self.val
+        return self.name + "=" + self.val    
     
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
@@ -17,6 +17,7 @@ class Subscription(models.Model):
     count = models.IntegerField(default=0)
     last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
+    sent_message_id = models.IntegerField(default=None, null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -91,6 +92,13 @@ class Message(models.Model):
         
     class Meta:
         unique_together = ('sheet_id', 'subscription')
+        
+class sentMessage(models.Model):
+    scheduled_time =  models.DateTimeField(null=True, blank=True)
+    actual_time =  models.DateTimeField(null=True, blank=True)
+    message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
 
 class Number(models.Model):
     phone_number = models.CharField(max_length=15, unique=True)

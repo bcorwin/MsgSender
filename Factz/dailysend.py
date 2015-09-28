@@ -1,5 +1,5 @@
 import Factz.do as do
-from Factz.models import Subscription
+from Factz.models import Subscription, sentMessage
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime
@@ -29,14 +29,25 @@ def dailysend():
         hours = delay//3600
         remainder = delay%3600
         minutes = remainder//60
-        S.next_send = datetime(now.year,now.month,now.day,hours,minutes)
+        scheduled_time = datetime(now.year,now.month,now.day,hours,minutes)
+        sm = sentMessage(scheduled_time=scheduled_time)
+        sm.save()
+        S.next_send = scheduled_time
+        S.sent_message_id = sm.id
         S.save()
     
     #Filter to records where next_send is today and is in the past
     send_subs = active_subs.filter(next_send__gte=now.date())
     send_subs = send_subs.filter(next_send__lt=now)
     for S in send_subs:
-        do.send_to_all(S)
+        #Eventully move this and the above save into def save for Sub model
+        res = do.send_to_all(S)
+        
+        sm = sentMessage.objects.get(pk=S.sent_message_id)
+        sm.actual_time = timezone.now()
+        sm.message = res["msgObj"]
+        sm.save()
+        
         S.next_send = None
         S.save()
 
