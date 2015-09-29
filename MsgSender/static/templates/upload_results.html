@@ -1,0 +1,58 @@
+<html>
+<head>
+    <style>
+        ul {list-style-type: none; margin: 0; padding: 10;}
+        pre {display: inline}
+        h2 {display: inline;}
+    </style>
+</head><body>
+    {% if Fail %}
+        <H2>Failed:</h2>
+        <ul>
+        {% for msg in Fail %}
+            <li>({{msg.0.sheet_id}}) {{msg.0}}</li>
+            <ul>
+            {% for value in msg.1 %}
+                <li><i>{{value.0}}</i>: {{value.1}}</li>
+            {% endfor %}
+            </ul>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% if Updated %}
+        <h2>Updated:</h2>
+        <ul>
+        {% for msg in Updated %}
+            <li>({{msg.0.sheet_id}}) {{msg.0}}</li>
+            {% for key,value in msg.1.items %}
+                <ul>
+                {% if value.0 %}
+                    <li><i>{{key}}</i></li>
+                    <ul>
+                        <li><pre>Old: {{value.0}}</pre></li>
+                        <li><pre>New: {{value.1}}</pre></li>
+                    </ul>
+                {% endif %}
+                </ul>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% if New %}
+        <h2>New:</h2>
+        <ul>
+        {% for msg in New %}
+            <li>({{msg.0.sheet_id}}) {{msg.0}}</li>
+        {% endfor %}
+        <ul>
+    {% endif %}
+    {% if Nochange %}
+        <h2>No Change:</h2>
+        <ul>
+        {% for msg in Nochange %}
+            <li>({{msg.sheet_id}}) {{msg}}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>

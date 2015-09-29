@@ -1,0 +1,24 @@
+ <html>
+ <head><style>
+    h3,h4 {display: inline;}
+    table, th, td {border: 1px solid black;}
+ </style></head>
+ <body>
+    <h3>Subscription:</h3> {{ msgObj.subscription }}<br>
+    <h3>Message:</h3> {{ msgObj.message }} <a href="{{ msgObj.source }}">Source</a><br>
+    <h3>Follow up:</h3> {{ msgObj.follow_up }}<br><br>
+    <table>
+        <tr>
+            <th>Number</th><th>Message</th><th>Follow up</th>
+        </tr>
+    
+        {% for num in texts%}
+        <tr>
+            <td>{{ num.Number.number }}</td>
+            <td {% if num.Message.0 > 0 %} style="color:red" {% endif %}>{{ num.Message.1 }}</td>
+            <td {% if num.Followup.0 > 0 %} style="color:red" {% endif %}>{{ num.Followup.1 }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+ </body>
+ </html>

@@ -9,7 +9,7 @@ class Variable(models.Model):
     val = models.CharField(max_length=128)
     
     def __str__(self):
-        return self.name + "=" + self.val
+        return self.name + "=" + self.val    
     
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
@@ -17,6 +17,7 @@ class Subscription(models.Model):
     count = models.IntegerField(default=0)
     last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
+    sent_message_id = models.IntegerField(default=None, null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -70,6 +71,7 @@ class Subscription(models.Model):
         return self.name
 
 class Message(models.Model):
+    sheet_id = models.IntegerField()
     message = models.CharField(max_length=320)
     follow_up = models.CharField(max_length=160, blank=True, null=True)
     source = models.CharField(max_length=160, blank=True, null=True)
@@ -87,6 +89,16 @@ class Message(models.Model):
     
     def __str__(self):
         return self.message
+        
+    class Meta:
+        unique_together = ('sheet_id', 'subscription')
+        
+class sentMessage(models.Model):
+    scheduled_time =  models.DateTimeField(null=True, blank=True)
+    actual_time =  models.DateTimeField(null=True, blank=True)
+    message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
 
 class Number(models.Model):
     phone_number = models.CharField(max_length=15, unique=True)
@@ -129,16 +141,23 @@ class activeSubscription(models.Model):
         self.number.update_sent()
         self.save()
     
-    def send(self, msgObj):
+    def send_message(self, msgObj):
         if self.active == True:
             res = send_message(msgObj, self)
             if res[0] == 0:
                 self.update_sent(msgObj)
-                if msgObj.follow_up != None:
-                    send_message(msgObj, self, type="followup")
         else:
-            res = (2, "Not active.")
-        return res
+            res = (-1, "Not active.")
+        return {"Message":res}
+    
+    def send_follow_up(self, msgObj):
+        if self.active == True and msgObj.follow_up not in ('', None):
+            res = send_message(msgObj, self, type="followup")
+        elif self.active != True:
+            res = (-1, "Not active.")
+        else:
+            res = (-2, "No follow up.")
+        return {"Followup":res}
     
     class Meta:
         unique_together = ('number', 'subscription')

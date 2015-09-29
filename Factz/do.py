@@ -3,10 +3,16 @@ from Factz.models import Number, Variable, Message, activeSubscription, Subscrip
 from datetime import datetime
 from random import choice
 import csv
-from Factz.utils import extract_command
+from django.core.exceptions import ValidationError
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from time import sleep
 
 def get_value(varname):
     return Variable.objects.get(name=varname).val
+    
+def get_activeSub(numObj, subObj):
+    return activeSubscription.objects.filter(number=numObj, subscription=subObj)
     
 def next_message(subObj, update=True):
     today = datetime.utcnow().date()
@@ -51,7 +57,7 @@ def toggle_active(number_id, subscription_id, status=None):
     If it does not exist, create it first then activate it.
     Returns the activeSubscription object (asObj)
     """
-    asObj = activeSubscription.objects.filter(number=number_id, subscription=subscription_id)
+    asObj = get_activeSub(number_id, subscription_id)
     if not asObj.exists():
         asObj = activeSubscription(number=number_id, subscription=subscription_id)
         status = True
@@ -77,6 +83,7 @@ def upload_file(f, sub, overwrite):
     """
     Reads a csv file (Format: ID, Message, Follow_up, Source) and adds to db.
     """
+    out = {"New":[], "Fail":[], "Updated":[], "Nochange":[]}
     if overwrite == True:
         Message.objects.filter(subscription=sub).delete()
     csvreader = csv.reader(f.read().decode().splitlines())
@@ -85,46 +92,105 @@ def upload_file(f, sub, overwrite):
         if header == True:
             header = False
             continue
+        sheet_id = int(row[0])
         msg = row[1]
         follow_up = row[2]
         source = row[3]
-        add = Message(message=msg, follow_up=follow_up, source=source, subscription=sub)
-        add.save()
+
+        msgObj =  Message.objects.filter(sheet_id=sheet_id)
+        if msgObj.exists():
+            msgObj = msgObj.get()
+            changes = {
+                "message":find_change(msg, msgObj.message),
+                "follow_up":find_change(follow_up, msgObj.follow_up),
+                "source":find_change(source, msgObj.source),
+            }
+            if make_changes(msgObj, changes) == True:
+                out = validate_save_append(msgObj, out, name="Updated", addl=changes)
+            else:
+                out["Nochange"].append(msgObj)
+        else:
+            add = Message(sheet_id=sheet_id, message=msg, follow_up=follow_up, source=source, subscription=sub)
+            out = validate_save_append(add, out)
+    return out
+
+def make_changes(obj, changes):
+    '''
+    Makes changes to obj. If no changes, return False, else return True
+    '''
+    out = False
+    for c in changes:
+        if changes[c] != None:
+            setattr(obj, c, changes[c][1])
+            out = True
+    return out
+
+def find_change(new, old):
+    '''
+    Compares two values. If they are the same, return None. If not return a tuple as (old, new)  
+    '''
+    return (old, new) if new != old else None
         
-def generate_reply(message, numObj):
-    # To do:
-    ## Source [SUB]-- send source for latest message sent
-    ## Unsubscribe -- Unsubscribe
-    ### Need extract sub(s) from message
-    ## Help or Commands -- Send list of available commands
-    ## Otherwise do what?
-    
-    commands = ["subscribe", "unsubscribe"]
-    command, parm = extract_command(message, commands)
-    
-    if command == "subscribe":
-        subObj = sub_exist("PoopFactz")
-        toggle_active(numObj, subObj, status=True)
-        return "You're now subscribed to " + subObj.name + "."
-    elif command == "unsubscribe":
-        subObj = sub_exist("PoopFactz")
-        toggle_active(numObj, subObj, status=False)
-        return "You're now unsubscribed to " + subObj.name + "."
-    return "Unknown command."
+def validate_save_append(obj, out, name="New", addl=None):
+    '''
+    Validates an object. If it's good, save it and return out[name] with an additional entry as (obj, addl).
+    If not, return out["Fail"] with an additional entry as (obj, the error)
+    '''
+    try:
+        obj.full_clean()
+        obj.save()
+        out[name].append((obj, addl))
+    except ValidationError as e:
+        out["Fail"].append((obj, e))
+    return out
     
 def send_to_all(subObj, msgObj=None):
     '''
     Sends a message to all phone numbers with active subscriptions for a given subscription.
     '''
+    texts = []
     if msgObj == None:
         msgObj = next_message(subObj)
     user_list = activeSubscription.objects.filter(subscription=subObj, active=True)
     success_cnt = 0
     for user in user_list:
-        res = user.send(msgObj)
-        if res[0] == 0:
+        add = {"Number":user}
+        res = user.send_message(msgObj)
+        if res["Message"][0] == 0:
             success_cnt += 1
+        add.update(res)
+        texts.append(add)
     if success_cnt > 0:
         msgObj.update_sent()
         subObj.update_sent()
-    return success_cnt
+    sleep(30)
+    #Send follow ups
+    for text in texts:
+        errCode = text["Message"][0]
+        asObj = text["Number"]
+        
+        if msgObj.follow_up in ('', None):
+            text.update({"Followup":(-2, "No follow up.")})
+        elif errCode == 0:
+            #Only send the follow up if the the message was sucessful
+            f_res = asObj.send_follow_up(msgObj)
+            text.update(f_res)
+        else:
+            text.update({"Followup":(4, "Message failed, did not attempt.")})
+        
+    out = {"texts":texts, "msgObj":msgObj}
+    email_send_results(out)
+    return out
+    
+def email_send_results(staOutput):
+    msgObj = staOutput["msgObj"]
+    
+    subject = msgObj.subscription.name + " sent!"
+    from_email = get_value("from_email")
+    to = get_value("to_emails")
+    
+    text_content = 'Send to all results:'
+    html_content = render_to_string('send_results.html', staOutput)
+    msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()

@@ -8,3 +8,4 @@ wsgiref==0.1.2
 twilio==4.5.0
 django-twilio==0.8.0
 newrelic
+python-postmark==0.4.7

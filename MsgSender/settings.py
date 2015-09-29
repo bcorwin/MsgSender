@@ -123,9 +123,16 @@ TWILIO_TEST_TOKEN = "ded1abfef63b838da2159d1cc9d5f133"
 TWILIO_TEST_NUMBER = "+15005550006"
 TWILIO_LIVE_NUMBER = "+16282227667"
 
+#Postmark email
+EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
+POSTMARK_TEST_MODE   = False
+POSTMARK_TRACK_OPENS = False
+
 try:
     TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
     TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+    POSTMARK_API_KEY = os.environ["POSTMARK_API_KEY"]
+    POSTMARK_SENDER = os.environ["POSTMARK_SENDER"]
 except:
     pass
 
