@@ -131,6 +131,9 @@ class Number(models.Model):
         return activeSubscription.objects.filter(number=self, subscription=subObj)
     
     def get_last_message(self, subObj = None):
+        '''
+        Get the most recent message for a given subscription OR the most recent if subObj is None
+        '''
         if subObj != None:
             asObj = activeSubscription.objects.filter(number=self, subscription=subObj)
         else:

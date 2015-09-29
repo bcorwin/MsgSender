@@ -9,9 +9,16 @@ from time import sleep
 import csv
 
 def get_value(varname):
+    '''
+    Grab the val for varname from the Variable table
+    '''
     return Variable.objects.get(name=varname).val
     
 def next_message(subObj, update=True):
+    '''
+    Randomly select the next message. Older messages have higher weight.
+    Weight =  number of days it's been since it was last sent
+    '''
     today = datetime.utcnow().date()
     msg_set = Message.objects.all().filter(subscription=subObj, active=True)
     
@@ -28,9 +35,9 @@ def next_message(subObj, update=True):
     return res
     
 def number_exist(phone_number):
-    """
+    '''
     If a number is in the database, return it otherwise return None
-    """
+    '''
     num = Number.objects.filter(phone_number=phone_number)
     if num.exists():
         return num.get()
@@ -38,9 +45,9 @@ def number_exist(phone_number):
         return None
 
 def sub_exist(name):
-    """
+    '''
     If a subscription is in the database, return it otherwise return None
-    """
+    '''
     sub = Subscription.objects.filter(name__iexact=name)
     if sub.exists():
         return sub.get()
@@ -48,10 +55,10 @@ def sub_exist(name):
         return None
     
 def add_number(num):
-    """
+    '''
     Adds a number to the database and returns it
     If the number is already in the database the function returns it
-    """
+    '''
     numObj = Number.objects.filter(phone_number=num)
     if numObj.exists():
         num = numObj.get()
@@ -61,6 +68,9 @@ def add_number(num):
     return num
     
 def add_rating(numObj, msgObj, rating):
+    '''
+    Adds a rating (and validates it)
+    '''
     R = Rating(number=numObj, message=msgObj, rating=rating)
     try:
         R.full_clean()
@@ -70,9 +80,9 @@ def add_rating(numObj, msgObj, rating):
         return e
 
 def upload_file(f, sub, overwrite):
-    """
+    '''
     Reads a csv file (Format: ID, Message, Follow_up, Source) and adds to db.
-    """
+    '''
     out = {"New":[], "Fail":[], "Updated":[], "Nochange":[]}
     if overwrite == True:
         Message.objects.filter(subscription=sub).delete()
@@ -173,6 +183,9 @@ def send_to_all(subObj, msgObj=None):
     return out
     
 def email_send_results(staOutput):
+    '''
+    Emails the output of send_to_all using the send_results.html template
+    '''
     msgObj = staOutput["msgObj"]
     
     subject = msgObj.subscription.name + " sent!"

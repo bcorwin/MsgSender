@@ -19,17 +19,29 @@ def extract_command(text, commands):
     return out
     
 def extract_subscription(text):
+    '''
+    Place older to extract the subscription from a text message
+    '''
     return sub_exist("PoopFactz")
     
 def subscribe(numObj, subObj):
+    '''
+    Activate number/subscription in activeSubscription and generate a response
+    '''
     numObj.toggle_active(subObj, status=True)
     return "You're now subscribed to " + subObj.name + "."
 
 def unsubscribe(numObj, subObj):
+    '''
+    Deactivate number/subscription in activeSubscription and generate a response
+    '''
     numObj.toggle_active(subObj, status=False)
     return "You're now unsubscribed to " + subObj.name + "."
     
 def get_source(numObj):
+    '''
+    Get the source for the last message and generate a response
+    '''
     msgObj = numObj.get_last_message()
     if msgObj is not None:
         return msgObj.source
@@ -37,6 +49,9 @@ def get_source(numObj):
         return "You have yet to receive a fact."
 
 def add_user(from_number, message):
+    '''
+    Add a user to the db and generate a response
+    '''
     command, parm = extract_command(message, commands)
     numObj = add_number(from_number)
     subObj = extract_subscription(parm)
@@ -47,6 +62,9 @@ def add_user(from_number, message):
     return out
 
 def set_rating(numObj, rating):
+    '''
+    Set the rating and generate a response
+    '''
     msgObj = numObj.get_last_message()
     if msgObj is not None:
         rate = add_rating(numObj, msgObj, rating)
@@ -59,6 +77,7 @@ def set_rating(numObj, rating):
         
 def update_user(message, numObj):
     '''
+    Use this for a number already in the db.
     Generate the reply to a text message given the message, list of commands,
     and number object.
     '''
@@ -79,6 +98,9 @@ def update_user(message, numObj):
     return out
     
 def gen_reply(from_number, message):
+    '''
+    High level function to generate a reply to a text
+    '''
     numObj = number_exist(from_number)
     if numObj == None:
         reply = add_user(from_number, message)
