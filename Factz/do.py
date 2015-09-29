@@ -12,7 +12,11 @@ def get_value(varname):
     '''
     Grab the val for varname from the Variable table
     '''
-    return Variable.objects.get(name=varname).val
+    try:
+        val = Variable.objects.get(name=varname).val
+    except:
+        val = None
+    return val
     
 def next_message(subObj, update=True):
     '''
@@ -21,19 +25,21 @@ def next_message(subObj, update=True):
     '''
     today = datetime.utcnow().date()
     msg_set = Message.objects.all().filter(subscription=subObj, active=True)
-    
+
     min_date = [m.last_sent.date() for m in msg_set if m.last_sent != None]
     min_date = min(min_date) if len(min_date) >0 else today
     ages = [m.last_sent.date() if m.last_sent != None else min_date for m in msg_set]
     ages = [(today - ls).days + 1 for ls in ages]
-    
+
     #randomly select an id given the above weights
     i = int(choice(''.join(str(i)*a for i,a in zip(range(len(msg_set)), ages))))
     res = msg_set[i]
+
     if update==True:
         res.update_sent()
+
     return res
-    
+
 def number_exist(phone_number):
     '''
     If a number is in the database, return it otherwise return None
@@ -53,7 +59,7 @@ def sub_exist(name):
         return sub.get()
     else:
         return None
-    
+
 def add_number(num):
     '''
     Adds a number to the database and returns it
@@ -127,10 +133,10 @@ def make_changes(obj, changes):
 
 def find_change(new, old):
     '''
-    Compares two values. If they are the same, return None. If not return a tuple as (old, new)  
+    Compares two values. If they are the same, return None. If not return a tuple as (old, new)
     '''
     return (old, new) if new != old else None
-        
+
 def validate_save_append(obj, out, name="New", addl=None):
     '''
     Validates an object. If it's good, save it and return out[name] with an additional entry as (obj, addl).
@@ -143,7 +149,7 @@ def validate_save_append(obj, out, name="New", addl=None):
     except ValidationError as e:
         out["Fail"].append((obj, e))
     return out
-    
+
 def send_to_all(subObj, msgObj=None):
     '''
     Sends a message to all phone numbers with active subscriptions for a given subscription.
@@ -151,6 +157,7 @@ def send_to_all(subObj, msgObj=None):
     texts = []
     if msgObj == None:
         msgObj = next_message(subObj)
+
     user_list = activeSubscription.objects.filter(subscription=subObj, active=True)
     success_cnt = 0
     for user in user_list:
@@ -168,7 +175,7 @@ def send_to_all(subObj, msgObj=None):
     for text in texts:
         errCode = text["Message"][0]
         asObj = text["Number"]
-        
+
         if msgObj.follow_up in ('', None):
             text.update({"Followup":(-2, "No follow up.")})
         elif errCode == 0:
@@ -177,23 +184,27 @@ def send_to_all(subObj, msgObj=None):
             text.update(f_res)
         else:
             text.update({"Followup":(4, "Message failed, did not attempt.")})
-        
+
     out = {"texts":texts, "msgObj":msgObj}
     email_send_results(out)
+
     return out
-    
+
 def email_send_results(staOutput):
     '''
     Emails the output of send_to_all using the send_results.html template
     '''
     msgObj = staOutput["msgObj"]
-    
+
     subject = msgObj.subscription.name + " sent!"
     from_email = get_value("from_email")
     to = get_value("to_emails")
-    
+    if to == None:
+        return None
+
     text_content = 'Send to all results:'
     html_content = render_to_string('send_results.html', staOutput)
     msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+    return None
