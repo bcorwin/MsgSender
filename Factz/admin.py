@@ -25,7 +25,7 @@ class varAdmin(admin.ModelAdmin):
     list_display = ['name', 'val']
     
 class smAdmin(admin.ModelAdmin):
-    list_display = ['scheduled_time', 'actual_time', 'message']
+    list_display = ['scheduled_start', 'actual_start', 'actual_end', 'actual_run', 'message']
 
 admin.site.register(Message, messageAdmin)
 admin.site.register(Number, numberAdmin)

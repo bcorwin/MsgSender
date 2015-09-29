@@ -17,7 +17,6 @@ class Subscription(models.Model):
     count = models.IntegerField(default=0)
     last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
-    sent_message_id = models.IntegerField(default=None, null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -94,11 +93,18 @@ class Message(models.Model):
         unique_together = ('sheet_id', 'subscription')
         
 class sentMessage(models.Model):
-    scheduled_time =  models.DateTimeField(null=True, blank=True)
-    actual_time =  models.DateTimeField(null=True, blank=True)
+    scheduled_start =  models.DateTimeField(null=True, blank=True)
+    actual_start = models.DateTimeField(null=True, blank=True)
+    actual_end = models.DateTimeField(null=True, blank=True)
+    actual_run = models.PositiveIntegerField(null=True, blank=True)
     message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    
+    def calc_runtime(self):
+        delta = self.actual_end - self.actual_start
+        self.actual_run = delta.total_seconds()//60
+        self.save()
 
 class Number(models.Model):
     phone_number = models.CharField(max_length=15, unique=True)
