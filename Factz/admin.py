@@ -1,5 +1,5 @@
 from django.contrib import admin
-from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage
+from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage, Rating
 
 def set_active(modeladmin, request, queryset):
     queryset.update(active=True)
@@ -33,3 +33,4 @@ admin.site.register(Subscription, subAdmin)
 admin.site.register(Variable, varAdmin)
 admin.site.register(activeSubscription, activeSubAdmin)
 admin.site.register(sentMessage, smAdmin)
+admin.site.register(Rating)

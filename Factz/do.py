@@ -1,5 +1,5 @@
 #Use do to store functions that may depend on models
-from Factz.models import Number, Variable, Message, activeSubscription, Subscription
+from Factz.models import Number, Variable, Message, activeSubscription, Subscription, Rating
 from datetime import datetime
 from random import choice
 import csv
@@ -79,6 +79,15 @@ def add_number(num):
         num.save()
     return num
     
+def add_rating(numObj, msgObj, rating):
+    R = Rating(number=numObj, message=msgObj, rating=rating)
+    try:
+        R.full_clean()
+        R.save()
+        return None
+    except ValidationError as e:
+        return e
+
 def upload_file(f, sub, overwrite):
     """
     Reads a csv file (Format: ID, Message, Follow_up, Source) and adds to db.

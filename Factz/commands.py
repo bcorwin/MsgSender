@@ -1,13 +1,13 @@
-from Factz.do import toggle_active, sub_exist, add_number, number_exist, get_activeSub
+from Factz.do import toggle_active, sub_exist, add_number, number_exist, add_rating
 import re
 
-commands = ["subscribe", "unsubscribe", "source"]
+commands = ["subscribe", "unsubscribe", "source", "rate"]
 
 def extract_command(text, commands):
-    """
+    '''
     Loops through the list of commands and looks for the pattern
     "COMMAND [PARAMETERS]" and outputs the first match it finds
-    """
+    '''
     out = [None, None]
     for c in commands:
         pattern = re.compile(c + " *(.*)", re.IGNORECASE)
@@ -29,16 +29,12 @@ def unsubscribe(numObj, subObj):
     toggle_active(numObj, subObj, status=False)
     return "You're now unsubscribed to " + subObj.name + "."
     
-def get_source(numObj, subObj):
-    asObj = get_activeSub(numObj, subObj)
-    if asObj.exists():
-        asObj = asObj.get()
-        if asObj.message is not None:
-            return asObj.message.source
-        else:
-            return "You have yet to recieve a fact from " + subObj.name + "."
+def get_source(numObj):
+    msgObj = numObj.get_last_message()
+    if msgObj is not None:
+        return msgObj.source
     else:
-        return "You are not subscribed to " + subObj.name + "."
+        return "You have yet to receive a fact."
 
 def add_user(from_number, message):
     command, parm = extract_command(message, commands)
@@ -50,6 +46,17 @@ def add_user(from_number, message):
     # To do: send last message that was sent for newly subscribed sub?
     return out
 
+def set_rating(numObj, rating):
+    msgObj = numObj.get_last_message()
+    if msgObj is not None:
+        rate = add_rating(numObj, msgObj, rating)
+        if rate == None:
+            return "Thanks for the rating!"
+        else:
+            return "Please submit a rating 1 through 5."
+    else:
+        return "You have yet to receive a fact."
+        
 def update_user(message, numObj):
     '''
     Generate the reply to a text message given the message, list of commands,
@@ -64,7 +71,9 @@ def update_user(message, numObj):
     elif command == "unsubscribe":
         out = unsubscribe(numObj, subObj)
     elif command == "source":
-        out = get_source(numObj, subObj)
+        out = get_source(numObj)
+    elif command == "rate":
+        out = set_rating(numObj, parm)
     else:
         out = "Unknown command."
     return out

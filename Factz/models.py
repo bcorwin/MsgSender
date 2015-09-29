@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message
 from django.utils import timezone
@@ -109,6 +110,20 @@ class Number(models.Model):
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
+    def get_last_message(self, subObj = None):
+        if subObj != None:
+            asObj = activeSubscription.objects.filter(number=self, subscription=subObj)
+        else:
+            asObj = activeSubscription.objects.filter(number=self).order_by('-last_sent')
+        
+        if asObj.exists():
+            asObj = asObj[0]
+            out = asObj.message
+        else:
+            out = None
+            
+        return out
+    
     def update_sent(self):
         self.last_sent = timezone.now()
         self.message_cnt += 1
@@ -164,3 +179,10 @@ class activeSubscription(models.Model):
     
     def __str__(self):
         return str(self.number) + " " + str(self.subscription) + " (" + str(self.active) + ")"
+
+class Rating(models.Model):
+    number = models.ForeignKey(Number, on_delete=models.PROTECT)
+    message = models.ForeignKey(Message, on_delete=models.PROTECT)
+    rating = models.IntegerField(validators = [MinValueValidator(1), MaxValueValidator(5)])
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
