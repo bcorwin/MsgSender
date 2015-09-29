@@ -13,7 +13,7 @@ class activeSubAdmin(admin.ModelAdmin):
     actions = [set_active, set_inactive]
     
 class messageAdmin(admin.ModelAdmin):    
-    list_display = ['subscription', 'message', 'follow_up', 'last_sent', 'active']
+    list_display = ['subscription', 'message', 'follow_up', 'last_sent', 'get_rating', 'active']
     list_filter = ['subscription', 'active', 'last_sent']
     actions = [set_active, set_inactive]
     

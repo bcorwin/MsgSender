@@ -82,6 +82,14 @@ class Message(models.Model):
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
+    def get_rating(self):
+        ratings = [r.rating for r in Rating.objects.filter(message=self)]
+        if len(ratings) > 0:
+            return round(sum(ratings)/len(ratings), 1)
+        else:
+            return None
+    get_rating.short_description = "Rating"
+    
     def update_sent(self):
         self.count += 1
         self.last_sent = timezone.now()
