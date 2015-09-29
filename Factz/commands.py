@@ -1,4 +1,4 @@
-from Factz.do import toggle_active, sub_exist, add_number, number_exist, add_rating
+from Factz.do import sub_exist, add_number, number_exist, add_rating
 import re
 
 commands = ["subscribe", "unsubscribe", "source", "rate"]
@@ -22,11 +22,11 @@ def extract_subscription(text):
     return sub_exist("PoopFactz")
     
 def subscribe(numObj, subObj):
-    toggle_active(numObj, subObj, status=True)
+    numObj.toggle_active(subObj, status=True)
     return "You're now subscribed to " + subObj.name + "."
 
 def unsubscribe(numObj, subObj):
-    toggle_active(numObj, subObj, status=False)
+    numObj.toggle_active(subObj, status=False)
     return "You're now unsubscribed to " + subObj.name + "."
     
 def get_source(numObj):
@@ -41,7 +41,7 @@ def add_user(from_number, message):
     numObj = add_number(from_number)
     subObj = extract_subscription(parm)
     #In future, check that that command == "subscribe"
-    toggle_active(numObj, subObj, status=True)
+    numObj.toggle_active(subObj, status=True)
     out = "Welcome to " + subObj.name + "! Your first message is on its way."
     # To do: send last message that was sent for newly subscribed sub?
     return out

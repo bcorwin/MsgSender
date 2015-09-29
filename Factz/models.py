@@ -110,6 +110,26 @@ class Number(models.Model):
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
+    def toggle_active(self, subObj, status=None):
+        '''
+        Either set the active status of a number/subscription pair to status
+        or toggle the current status.
+        If it does not exist, create it first then activate it.
+        Returns the activeSubscription object (asObj)
+        '''
+        asObj = self.get_active_subscription(subObj)
+        if not asObj.exists():
+            asObj = activeSubscription(number=self, subscription=subObj)
+            status = True
+        else:
+            asObj = asObj.get()
+        asObj.active = status if status != None else not asObj.active
+        asObj.save()
+        return asObj
+    
+    def get_active_subscription(self, subObj):
+        return activeSubscription.objects.filter(number=self, subscription=subObj)
+    
     def get_last_message(self, subObj = None):
         if subObj != None:
             asObj = activeSubscription.objects.filter(number=self, subscription=subObj)

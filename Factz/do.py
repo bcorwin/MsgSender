@@ -1,18 +1,15 @@
 #Use do to store functions that may depend on models
 from Factz.models import Number, Variable, Message, activeSubscription, Subscription, Rating
-from datetime import datetime
-from random import choice
-import csv
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from datetime import datetime
+from random import choice
 from time import sleep
+import csv
 
 def get_value(varname):
     return Variable.objects.get(name=varname).val
-    
-def get_activeSub(numObj, subObj):
-    return activeSubscription.objects.filter(number=numObj, subscription=subObj)
     
 def next_message(subObj, update=True):
     today = datetime.utcnow().date()
@@ -49,31 +46,15 @@ def sub_exist(name):
         return sub.get()
     else:
         return None
-        
-def toggle_active(number_id, subscription_id, status=None):
-    """
-    Either set the active status of a number/subscription pair to status
-    or toggle the current status.
-    If it does not exist, create it first then activate it.
-    Returns the activeSubscription object (asObj)
-    """
-    asObj = get_activeSub(number_id, subscription_id)
-    if not asObj.exists():
-        asObj = activeSubscription(number=number_id, subscription=subscription_id)
-        status = True
-    else:
-        asObj = asObj.get()
-    asObj.active = status if status != None else not asObj.active
-    asObj.save()
-    return asObj
     
 def add_number(num):
     """
     Adds a number to the database and returns it
     If the number is already in the database the function returns it
     """
-    if Number.objects.filter(phone_number=num).exists():
-        num = Number.objects.get(phone_number=num)
+    numObj = Number.objects.filter(phone_number=num)
+    if numObj.exists():
+        num = numObj.get()
     else:
         num = Number(phone_number=num)
         num.save()
