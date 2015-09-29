@@ -17,6 +17,9 @@ def extract_command(text, commands):
             break
     return out
     
+def extract_subscription(text):
+    return sub_exist("PoopFactz")
+    
 def subscribe(numObj, subObj):
     toggle_active(numObj, subObj, status=True)
     return "You're now subscribed to " + subObj.name + "."
@@ -45,7 +48,7 @@ def generate_reply(message, numObj):
     commands = ["subscribe", "unsubscribe", "source"]
     command, parm = extract_command(message, commands)
     
-    subObj = sub_exist("PoopFactz")    
+    subObj = extract_subscription(parm)
     
     if command == "subscribe":
         out = subscribe(numObj, subObj)
