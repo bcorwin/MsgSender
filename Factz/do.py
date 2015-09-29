@@ -7,6 +7,7 @@ from Factz.utils import extract_command
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from time import sleep
 
 def get_value(varname):
     return Variable.objects.get(name=varname).val
@@ -192,7 +193,7 @@ def send_to_all(subObj, msgObj=None):
     if success_cnt > 0:
         msgObj.update_sent()
         subObj.update_sent()
-        
+    sleep(30)
     #Send follow ups
     for text in texts:
         errCode = text["Message"][0]
