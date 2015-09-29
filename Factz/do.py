@@ -3,7 +3,6 @@ from Factz.models import Number, Variable, Message, activeSubscription, Subscrip
 from datetime import datetime
 from random import choice
 import csv
-from Factz.utils import extract_command
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -141,38 +140,6 @@ def validate_save_append(obj, out, name="New", addl=None):
     except ValidationError as e:
         out["Fail"].append((obj, e))
     return out
-    
-def generate_reply(message, numObj):
-    # To do:
-    ## Source [SUB]-- send source for latest message sent
-    ## Unsubscribe -- Unsubscribe
-    ### Need extract sub(s) from message
-    ## Help or Commands -- Send list of available commands
-    ## Otherwise do what?
-    
-    commands = ["subscribe", "unsubscribe", "source"]
-    command, parm = extract_command(message, commands)
-    
-    if command == "subscribe":
-        subObj = sub_exist("PoopFactz")
-        toggle_active(numObj, subObj, status=True)
-        return "You're now subscribed to " + subObj.name + "."
-    elif command == "unsubscribe":
-        subObj = sub_exist("PoopFactz")
-        toggle_active(numObj, subObj, status=False)
-        return "You're now unsubscribed to " + subObj.name + "."
-    elif command == "source":
-        subObj = sub_exist("PoopFactz")
-        asObj = activeSubscription.objects.filter(number=numObj, subscription=subObj)
-        if asObj.exists():
-            asObj = asObj.get()
-            if asObj.message is not None:
-                return asObj.message.source
-            else:
-                return "You have yet to recieve a fact from " + subObj.name + "."
-        else:
-            return "You are not subscribed to " + subObj.name + "."
-    return "Unknown command."
     
 def send_to_all(subObj, msgObj=None):
     '''
