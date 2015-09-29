@@ -1,6 +1,6 @@
 from Factz.utils import format_number
-from Factz.do import number_exist, add_number, toggle_active, sub_exist, upload_file, send_to_all
-from Factz.commands import generate_reply
+from Factz.do import upload_file, send_to_all
+from Factz.commands import gen_reply
 from Factz.forms import uploadFactz, sendForm
 from django_twilio.decorators import twilio_view
 from django.contrib.admin.views.decorators import staff_member_required
@@ -13,23 +13,15 @@ from twilio.twiml import Response
 def sms_reply(request):
     if request.method == "POST":
         from_number = format_number(request.POST['From'])
-        msg = request.POST['Body']
+        message = request.POST['Body']
     elif request.method == "GET":
         from_number = format_number(request.GET['From'])
-        msg = request.GET['Body']
+        message = request.GET['Body']
         
     r = Response()
-    numObj = number_exist(from_number)
-    if numObj == None:
-        numObj = add_number(from_number)
-        # To do: look for "subscribe {SUB}" pattern and move to commands
-        subObj = sub_exist("PoopFactz")
-        toggle_active(numObj, subObj, status=True)
-        r.message("Welcome to PoopFactz! Your first message is on its way.")
-        # To do: send last message that was sent for newly subscribed sub?
-    else:
-        reply = generate_reply(msg, numObj)
-        r.message(reply)
+    reply = gen_reply(from_number, message)
+    r.message(reply)
+    
     return r
     
 @twilio_view

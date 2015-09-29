@@ -11,6 +11,9 @@ from time import sleep
 def get_value(varname):
     return Variable.objects.get(name=varname).val
     
+def get_activeSub(numObj, subObj):
+    return activeSubscription.objects.filter(number=numObj, subscription=subObj)
+    
 def next_message(subObj, update=True):
     today = datetime.utcnow().date()
     msg_set = Message.objects.all().filter(subscription=subObj, active=True)
@@ -54,7 +57,7 @@ def toggle_active(number_id, subscription_id, status=None):
     If it does not exist, create it first then activate it.
     Returns the activeSubscription object (asObj)
     """
-    asObj = activeSubscription.objects.filter(number=number_id, subscription=subscription_id)
+    asObj = get_activeSub(number_id, subscription_id)
     if not asObj.exists():
         asObj = activeSubscription(number=number_id, subscription=subscription_id)
         status = True

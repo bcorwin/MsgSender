@@ -1,6 +1,7 @@
-from Factz.models import activeSubscription
-from Factz.do import toggle_active, sub_exist
+from Factz.do import toggle_active, sub_exist, add_number, number_exist, get_activeSub
 import re
+
+commands = ["subscribe", "unsubscribe", "source"]
 
 def extract_command(text, commands):
     """
@@ -29,7 +30,7 @@ def unsubscribe(numObj, subObj):
     return "You're now unsubscribed to " + subObj.name + "."
     
 def get_source(numObj, subObj):
-    asObj = activeSubscription.objects.filter(number=numObj, subscription=subObj)
+    asObj = get_activeSub(numObj, subObj)
     if asObj.exists():
         asObj = asObj.get()
         if asObj.message is not None:
@@ -39,13 +40,21 @@ def get_source(numObj, subObj):
     else:
         return "You are not subscribed to " + subObj.name + "."
 
-def generate_reply(message, numObj):
+def add_user(from_number, message):
+    command, parm = extract_command(message, commands)
+    numObj = add_number(from_number)
+    subObj = extract_subscription(parm)
+    #In future, check that that command == "subscribe"
+    toggle_active(numObj, subObj, status=True)
+    out = "Welcome to PoopFactz! Your first message is on its way."
+    # To do: send last message that was sent for newly subscribed sub?
+    return out
+
+def update_user(message, numObj):
     '''
     Generate the reply to a text message given the message, list of commands,
     and number object.
     '''
-    
-    commands = ["subscribe", "unsubscribe", "source"]
     command, parm = extract_command(message, commands)
     
     subObj = extract_subscription(parm)
@@ -59,3 +68,12 @@ def generate_reply(message, numObj):
     else:
         out = "Unknown command."
     return out
+    
+def gen_reply(from_number, message):
+    numObj = number_exist(from_number)
+    if numObj == None:
+        reply = add_user(from_number, message)
+    else:
+        reply = update_user(message, numObj)
+    return reply
+    
