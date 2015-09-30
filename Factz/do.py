@@ -25,8 +25,7 @@ def next_message(subObj):
     '''
     today = datetime.utcnow().date()
     msg_set = Message.objects.all().filter(subscription=subObj, active=True)
-    if msg_set.exists() == False:
-        return None
+    if msg_set.exists() == False: return None
 
     min_date = [m.last_sent.date() for m in msg_set if m.last_sent != None]
     min_date = min(min_date) if len(min_date) >0 else today

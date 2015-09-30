@@ -108,6 +108,7 @@ class sentMessage(models.Model):
     actual_end = models.DateTimeField(null=True, blank=True)
     actual_run = models.PositiveIntegerField(null=True, blank=True)
     message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
     msg_success = models.PositiveIntegerField(null=True, blank=True)
     msg_fail = models.PositiveIntegerField(null=True, blank=True)
     msg_na = models.PositiveIntegerField(null=True, blank=True)

@@ -1,9 +1,10 @@
 import Factz.do as do
-from Factz.models import Subscription, sentMessage
+from Factz.models import Subscription, sentMessage, activeSubscription
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime
 from random import randint
+from time import sleep
 
 def dailysend():
 
@@ -41,8 +42,9 @@ def dailysend():
     send_subs = send_subs.filter(next_send__lt=now)
     for S in send_subs:
         
-        #Record start time for the subscription run
-        sm = sentMessage(scheduled_start=S.next_send)
+        #Record start timse for the subscription run
+        sm = sentMessage(subscription=S)
+        sm.scheduled_start = S.next_send
         sm.actual_start = timezone.now() #Don't use just 'now'; it'll be stale
 
         #Perform the sends and clear next_send
@@ -65,5 +67,27 @@ def dailysend():
         sm.fu_fail = res['fu_status']['fail']
         sm.fu_na = res['fu_status']['na']
         sm.save()        
+
+    #Loop over new users without any sends
+    new_users = activeSubscription.objects.all().filter(active=True,last_sent=None)
+    for U in new_users:
+        
+        #Quit if the subscription is inactive or doesn't have a past send logged
+        subs = U.subscription
+        if subs.active == False or subs.last_sent is None: break
+            
+        #Find the most recent sentMessage or quit if none exist
+        sentM = sentMessage.objects.all().filter(subscription=subs)
+        sentM = sentM.order_by('-scheduled_start')
+        try: sm = sentM[0]
+        except: break
+        msgObj = sm.message
+        
+        #Immediately send the message; don't update subscription/message counters
+        #Eventually this code needs to be merged into a unified functions with do.send_to_all
+        res = U.send_message(msgObj)        
+        sleep(30)
+        if msgObj.follow_up in ('', None) and res['Message'][0] == 0:
+            U.send_follow_up(msgObj)       
 
     return(None)
