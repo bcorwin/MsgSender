@@ -154,41 +154,61 @@ def send_to_all(subObj, msgObj=None):
     '''
     Sends a message to all phone numbers with active subscriptions for a given subscription.
     '''
-    texts = []
+    
     if msgObj == None:
         msgObj = next_message(subObj)
-
     user_list = activeSubscription.objects.filter(subscription=subObj, active=True)
-    success_cnt = 0
+    
+    texts = []
+    #success_count = 0
+    msg_status = {'succ':0,'fail':0,'na':0}
+    fu_status =  {'succ':0,'fail':0,'na':0}
+    
     for user in user_list:
         add = {"Number":user}
         res = user.send_message(msgObj)
-        if res["Message"][0] == 0:
-            success_cnt += 1
+        #if res["Message"][0] == 0:
+        #    success_count += 1
+        msg_status = update_status(msg_status, res, 'Message')
         add.update(res)
         texts.append(add)
-    if success_cnt > 0:
-        msgObj.update_sent()
-        subObj.update_sent()
+        
+    #if success_count > 0:
+    #    msgObj.update_sent()
+    #    subObj.update_sent()
+    msgObj.update_sent()
+    subObj.update_sent()
+        
     sleep(30)
-    #Send follow ups
+    
     for text in texts:
         errCode = text["Message"][0]
         asObj = text["Number"]
-
         if msgObj.follow_up in ('', None):
-            text.update({"Followup":(-2, "No follow up.")})
+            f_res = {"Followup":(-2, "No follow up.")}
+            text.update(f_res)
         elif errCode == 0:
             #Only send the follow up if the the message was sucessful
             f_res = asObj.send_follow_up(msgObj)
             text.update(f_res)
         else:
-            text.update({"Followup":(4, "Message failed, did not attempt.")})
+            f_res = {"Followup":(4, "Message failed, did not attempt.")}
+            text.update(f_res)
+        fu_status = update_status(fu_status, f_res, 'Followup')
 
-    out = {"texts":texts, "msgObj":msgObj}
+    out = {"texts":texts, "msgObj":msgObj, "msg_status":msg_status, "fu_status":fu_status}
     email_send_results(out)
 
     return out
+
+def update_status(counter, result, msg_type):
+    if result[msg_type][0] == 0:
+        counter['succ'] += 1
+    elif result[msg_type][0] > 0:
+        counter['fail'] += 1
+    elif result[msg_type][0] < 0:
+        counter['na'] += 1
+    return counter
 
 def email_send_results(staOutput):
     '''
