@@ -18,7 +18,7 @@ class messageAdmin(admin.ModelAdmin):
     actions = [set_active, set_inactive]
     
 class numberAdmin(admin.ModelAdmin):
-    list_display = ['phone_number', 'last_sent']
+    list_display = ['__str__', 'phone_number', 'last_sent']
 
 class subAdmin(admin.ModelAdmin):
     list_display = ['name', 'last_sent', 'next_send', 'active']

@@ -124,6 +124,10 @@ class Number(models.Model):
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
+    #Optional information
+    name = models.CharField(max_length=32, blank=True, null=True)
+    email = models.CharField(max_length=32, blank=True, null=True)
+    
     def toggle_active(self, subObj, status=None):
         '''
         Either set the active status of a number/subscription pair to status
@@ -174,7 +178,7 @@ class Number(models.Model):
             raise ValueError(chk[1])
 		
     def __str__(self):
-        return self.phone_number
+        return self.name if self.name != None else self.phone_number
         
 class activeSubscription(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)
