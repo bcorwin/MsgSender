@@ -4,6 +4,7 @@ from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message
 from django.utils import timezone
 from datetime import datetime
+from math import ceil
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -118,7 +119,7 @@ class sentMessage(models.Model):
     
     def calc_runtime(self):
         delta = self.actual_end - self.actual_start
-        self.actual_run = delta.total_seconds()//60
+        self.actual_run = ceil(delta.total_seconds()/60)
         self.save()
 
 class Number(models.Model):
