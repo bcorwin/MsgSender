@@ -73,8 +73,8 @@ class Subscription(models.Model):
 class Message(models.Model):
     sheet_id = models.IntegerField()
     message = models.CharField(max_length=320)
-    follow_up = models.CharField(max_length=160, blank=True, null=True)
-    source = models.CharField(max_length=160, blank=True, null=True)
+    follow_up = models.CharField(max_length=160)
+    source = models.CharField(max_length=160)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
     count = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
