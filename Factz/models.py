@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message
 from django.utils import timezone
@@ -81,6 +82,14 @@ class Message(models.Model):
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
+    def get_rating(self):
+        ratings = [r.rating for r in Rating.objects.filter(message=self)]
+        if len(ratings) > 0:
+            return round(sum(ratings)/len(ratings), 1)
+        else:
+            return None
+    get_rating.short_description = "Rating"
+    
     def update_sent(self):
         self.count += 1
         self.last_sent = timezone.now()
@@ -114,6 +123,43 @@ class Number(models.Model):
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    
+    def toggle_active(self, subObj, status=None):
+        '''
+        Either set the active status of a number/subscription pair to status
+        or toggle the current status.
+        If it does not exist, create it first then activate it.
+        Returns the activeSubscription object (asObj)
+        '''
+        asObj = self.get_active_subscription(subObj)
+        if not asObj.exists():
+            asObj = activeSubscription(number=self, subscription=subObj)
+            status = True
+        else:
+            asObj = asObj.get()
+        asObj.active = status if status != None else not asObj.active
+        asObj.save()
+        return asObj
+    
+    def get_active_subscription(self, subObj):
+        return activeSubscription.objects.filter(number=self, subscription=subObj)
+    
+    def get_last_message(self, subObj = None):
+        '''
+        Get the most recent message for a given subscription OR the most recent if subObj is None
+        '''
+        if subObj != None:
+            asObj = activeSubscription.objects.filter(number=self, subscription=subObj)
+        else:
+            asObj = activeSubscription.objects.filter(number=self).order_by('-last_sent')
+        
+        if asObj.exists():
+            asObj = asObj[0]
+            out = asObj.message
+        else:
+            out = None
+            
+        return out
     
     def update_sent(self):
         self.last_sent = timezone.now()
@@ -170,3 +216,10 @@ class activeSubscription(models.Model):
     
     def __str__(self):
         return str(self.number) + " " + str(self.subscription) + " (" + str(self.active) + ")"
+
+class Rating(models.Model):
+    number = models.ForeignKey(Number, on_delete=models.PROTECT)
+    message = models.ForeignKey(Message, on_delete=models.PROTECT)
+    rating = models.IntegerField(validators = [MinValueValidator(1), MaxValueValidator(5)])
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)

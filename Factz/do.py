@@ -1,24 +1,28 @@
 #Use do to store functions that may depend on models
-from Factz.models import Number, Variable, Message, activeSubscription, Subscription
-from datetime import datetime
-from random import choice
-import csv
+from Factz.models import Number, Variable, Message, activeSubscription, Subscription, Rating
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from datetime import datetime
+from random import choice
 from time import sleep
+import csv
 
 def get_value(varname):
+    '''
+    Grab the val for varname from the Variable table
+    '''
     try:
         val = Variable.objects.get(name=varname).val
     except:
         val = None
     return val
-
-def get_activeSub(numObj, subObj):
-    return activeSubscription.objects.filter(number=numObj, subscription=subObj)
-
+    
 def next_message(subObj, update=True):
+    '''
+    Randomly select the next message. Older messages have higher weight.
+    Weight =  number of days it's been since it was last sent
+    '''
     today = datetime.utcnow().date()
     msg_set = Message.objects.all().filter(subscription=subObj, active=True)
 
@@ -37,9 +41,9 @@ def next_message(subObj, update=True):
     return res
 
 def number_exist(phone_number):
-    """
+    '''
     If a number is in the database, return it otherwise return None
-    """
+    '''
     num = Number.objects.filter(phone_number=phone_number)
     if num.exists():
         return num.get()
@@ -47,48 +51,44 @@ def number_exist(phone_number):
         return None
 
 def sub_exist(name):
-    """
+    '''
     If a subscription is in the database, return it otherwise return None
-    """
+    '''
     sub = Subscription.objects.filter(name__iexact=name)
     if sub.exists():
         return sub.get()
     else:
         return None
 
-def toggle_active(number_id, subscription_id, status=None):
-    """
-    Either set the active status of a number/subscription pair to status
-    or toggle the current status.
-    If it does not exist, create it first then activate it.
-    Returns the activeSubscription object (asObj)
-    """
-    asObj = get_activeSub(number_id, subscription_id)
-    if not asObj.exists():
-        asObj = activeSubscription(number=number_id, subscription=subscription_id)
-        status = True
-    else:
-        asObj = asObj.get()
-    asObj.active = status if status != None else not asObj.active
-    asObj.save()
-    return asObj
-
 def add_number(num):
-    """
+    '''
     Adds a number to the database and returns it
     If the number is already in the database the function returns it
-    """
-    if Number.objects.filter(phone_number=num).exists():
-        num = Number.objects.get(phone_number=num)
+    '''
+    numObj = Number.objects.filter(phone_number=num)
+    if numObj.exists():
+        num = numObj.get()
     else:
         num = Number(phone_number=num)
         num.save()
     return num
+    
+def add_rating(numObj, msgObj, rating):
+    '''
+    Adds a rating (and validates it)
+    '''
+    R = Rating(number=numObj, message=msgObj, rating=rating)
+    try:
+        R.full_clean()
+        R.save()
+        return None
+    except ValidationError as e:
+        return e
 
 def upload_file(f, sub, overwrite):
-    """
+    '''
     Reads a csv file (Format: ID, Message, Follow_up, Source) and adds to db.
-    """
+    '''
     out = {"New":[], "Fail":[], "Updated":[], "Nochange":[]}
     if overwrite == True:
         Message.objects.filter(subscription=sub).delete()
@@ -191,6 +191,9 @@ def send_to_all(subObj, msgObj=None):
     return out
 
 def email_send_results(staOutput):
+    '''
+    Emails the output of send_to_all using the send_results.html template
+    '''
     msgObj = staOutput["msgObj"]
 
     subject = msgObj.subscription.name + " sent!"
