@@ -49,10 +49,19 @@ def dailysend():
         S.last_sent = now
         S.save()
 
-        #Record the end time and calculate the delta for the subscription run
+        #Record the end time, run time, and message for the subscription run
         sm.message = res["msgObj"]
         sm.actual_end = timezone.now() #Don't use just 'now'; it'll be stale
         sm.calc_runtime()
         sm.save()
+        
+        #Set result metrics for the subscription run; refactor this block
+        sm.msg_success = res['msg_status']['succ']
+        sm.msg_fail = res['msg_status']['fail']
+        sm.msg_na = res['msg_status']['na']
+        sm.fu_success = res['fu_status']['succ']
+        sm.fu_fail = res['fu_status']['fail']
+        sm.fu_na = res['fu_status']['na']
+        sm.save()        
 
     return(None)

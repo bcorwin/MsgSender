@@ -107,6 +107,12 @@ class sentMessage(models.Model):
     actual_end = models.DateTimeField(null=True, blank=True)
     actual_run = models.PositiveIntegerField(null=True, blank=True)
     message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
+    msg_success = models.PositiveIntegerField(null=True, blank=True)
+    msg_fail = models.PositiveIntegerField(null=True, blank=True)
+    msg_na = models.PositiveIntegerField(null=True, blank=True)
+    fu_success = models.PositiveIntegerField(null=True, blank=True)
+    fu_fail = models.PositiveIntegerField(null=True, blank=True)
+    fu_na = models.PositiveIntegerField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -183,7 +189,7 @@ class Number(models.Model):
 class activeSubscription(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
-    message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
     message_cnt = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
