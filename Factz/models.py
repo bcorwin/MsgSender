@@ -125,7 +125,7 @@ class sentMessage(models.Model):
     
     def calc_runtime(self):
         delta = self.actual_end - self.actual_start
-        self.actual_run = ceil(delta.total_seconds()/60)
+        self.actual_run = int(delta.total_seconds())
         self.save()
 
 class Number(models.Model):
