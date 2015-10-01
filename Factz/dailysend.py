@@ -74,13 +74,13 @@ def dailysend():
         
         #Quit if the subscription is inactive or doesn't have a past send logged
         subs = U.subscription
-        if subs.active == False or subs.last_sent is None: break
-            
+        if (subs.active == False or subs.last_sent is None): continue
+        
         #Find the most recent sentMessage or quit if none exist
         sentM = sentMessage.objects.all().filter(subscription=subs)
         sentM = sentM.order_by('-scheduled_start')
         try: sm = sentM[0]
-        except: break
+        except: continue
         msgObj = sm.message
         
         #Immediately send the message; don't update subscription/message counters
@@ -89,5 +89,6 @@ def dailysend():
         sleep(30)
         if msgObj.follow_up in ('', None) and res['Message'][0] == 0:
             U.send_follow_up(msgObj)       
+        
 
     return(None)
