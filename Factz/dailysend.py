@@ -90,6 +90,5 @@ def dailysend():
         if msgObj.follow_up in ('', None) and res['Message'][0] == 0:
             U.send_follow_up(msgObj)       
         
-        #Consider if the sm record should be updated with these success metrics
 
     return(None)
