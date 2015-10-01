@@ -94,7 +94,9 @@ def update_user(message, numObj):
     elif command == "rate":
         out = set_rating(numObj, parm)
     else:
-        out = "Unknown command."
+        out = "Unknown command. "
+        out += "Try one of these: "
+        out += ", ".join(commands)
     return out
     
 def gen_reply(from_number, message):

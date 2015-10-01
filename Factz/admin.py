@@ -8,8 +8,8 @@ def set_inactive(modeladmin, request, queryset):
     queryset.update(active=False)
 
 class activeSubAdmin(admin.ModelAdmin):
-    list_display = ['number', 'subscription', 'active']
-    list_filter = ['subscription', 'active']
+    list_display = ['number', 'subscription', 'last_sent', 'active']
+    list_filter = ['subscription', 'active', 'last_sent']
     readonly_fields = ['message_cnt']
     actions = [set_active, set_inactive]
     
