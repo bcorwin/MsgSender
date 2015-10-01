@@ -189,7 +189,16 @@ class Number(models.Model):
         chk = send_test_message(self)
         if chk[0] != 0:
             raise ValueError(chk[1])
-		
+            
+    def save(self, *args, **kwargs):
+        self.phone_number = format_number(self.phone_number)
+        
+        chk = send_test_message(self)
+        if chk[0] != 0:
+            raise ValueError(chk[1])
+            
+        super(...).save(*args, **kwargs)
+        
     def __str__(self):
         return self.name if self.name != None else self.phone_number
         
