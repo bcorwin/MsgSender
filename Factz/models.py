@@ -97,7 +97,12 @@ class Message(models.Model):
         self.save()
     
     def __str__(self):
-        return self.message
+        if len(self.message) > 160:
+            out = self.message[0:159]
+            out += "..."
+        else:
+            out = self.message
+        return out
         
     class Meta:
         unique_together = ('sheet_id', 'subscription')
