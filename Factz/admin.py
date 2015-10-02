@@ -33,6 +33,7 @@ class varAdmin(admin.ModelAdmin):
     
 class smAdmin(admin.ModelAdmin):
     list_display = ['scheduled_start', 'actual_start', 'actual_end', 'actual_run', 'message']
+    list_filter = ['subscription', 'scheduled_start', 'actual_run', 'next_send']
 
 class ratingAdmin(admin.ModelAdmin):
     list_display = ['number', 'message', 'rating']
