@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from datetime import datetime
-from random import choice
+from random import random
 from time import sleep
 import csv
 
@@ -18,6 +18,21 @@ def get_value(varname):
         val = None
     return val
     
+def weighted_choice(obj, weights):
+    if len(obj) != len(weights):
+        raise ValidationError
+    totals = []
+    running_total = 0
+
+    for w in weights:
+        running_total += w
+        totals.append(running_total)
+
+    rnd = random() * running_total
+    for i, total in enumerate(totals):
+        if rnd < total:
+            return obj[i]
+    
 def next_message(subObj):
     '''
     Randomly select the next message. Older messages have higher weight.
@@ -29,12 +44,12 @@ def next_message(subObj):
 
     min_date = [m.last_sent.date() for m in msg_set if m.last_sent != None]
     min_date = min(min_date) if len(min_date) >0 else today
+    
     ages = [m.last_sent.date() if m.last_sent != None else min_date for m in msg_set]
-    ages = [(today - ls).days + 1 for ls in ages]
+    ages = [int(1.25**((today - ls).days + 1)) for ls in ages]
 
-    #randomly select an id given the above weights
-    i = int(choice(''.join(str(i)*a for i,a in zip(range(len(msg_set)), ages))))
-    res = msg_set[i]
+    #randomly select a message given the above weights
+    res = weighted_choice(msg_set, ages)
     return res
 
 def number_exist(phone_number):

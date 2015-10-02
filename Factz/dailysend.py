@@ -2,7 +2,7 @@ import Factz.do as do
 from Factz.models import Subscription, sentMessage, activeSubscription
 from django.db.models import Q
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import randint
 from time import sleep
 
@@ -69,9 +69,9 @@ def dailysend():
         sm.save()        
 
     #Loop over new users without any sends
-    new_users = activeSubscription.objects.all().filter(active=True,last_sent=None)
+    new_users = activeSubscription.objects.all()
+    new_users = new_users.filter(active=True,last_sent=None,inserted_date__gte=today-timedelta(days=1))
     for U in new_users:
-        
         #Quit if the subscription is inactive or doesn't have a past send logged
         subs = U.subscription
         if (subs.active == False or subs.last_sent is None): continue
@@ -86,7 +86,7 @@ def dailysend():
         #Immediately send the message; don't update subscription/message counters
         #Eventually this code needs to be merged into a unified functions with do.send_to_all
         res = U.send_message(msgObj)        
-        sleep(30)
+        sleep(15)
         if msgObj.follow_up in ('', None) and res['Message'][0] == 0:
             U.send_follow_up(msgObj)       
         #Results not currently being updated on sm record

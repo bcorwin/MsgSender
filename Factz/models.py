@@ -97,7 +97,12 @@ class Message(models.Model):
         self.save()
     
     def __str__(self):
-        return self.message
+        if len(self.message) > 160:
+            out = self.message[0:159]
+            out += "..."
+        else:
+            out = self.message
+        return out
         
     class Meta:
         unique_together = ('sheet_id', 'subscription')
@@ -120,7 +125,7 @@ class sentMessage(models.Model):
     
     def calc_runtime(self):
         delta = self.actual_end - self.actual_start
-        self.actual_run = ceil(delta.total_seconds()/60)
+        self.actual_run = int(delta.total_seconds())
         self.save()
 
 class Number(models.Model):
@@ -184,7 +189,16 @@ class Number(models.Model):
         chk = send_test_message(self)
         if chk[0] != 0:
             raise ValueError(chk[1])
-		
+            
+    def save(self, *args, **kwargs):
+        self.phone_number = format_number(self.phone_number)
+        
+        chk = send_test_message(self)
+        if chk[0] != 0:
+            raise ValueError(chk[1])
+            
+        super(...).save(*args, **kwargs)
+        
     def __str__(self):
         return self.name if self.name != None else self.phone_number
         
