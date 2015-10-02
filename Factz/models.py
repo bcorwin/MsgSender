@@ -197,7 +197,7 @@ class Number(models.Model):
         if chk[0] != 0:
             raise ValueError(chk[1])
             
-        super(...).save(*args, **kwargs)
+        super(Number, self).save(*args, **kwargs)
         
     def __str__(self):
         return self.name if self.name != None else self.phone_number
