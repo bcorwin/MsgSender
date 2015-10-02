@@ -109,14 +109,14 @@ class Subscription(models.Model):
     send_sunday = models.BooleanField(default=True)
     
     def start_time(self):
-        hours = self.start_time.hour
-        minutes = self.start_time.minute
+        hours = self.send_start.hour
+        minutes = self.send_start.minute
         val = (hours*60+minutes)*60
         return(val)
         
     def end_time(self):
-        hours = self.end_time.hour
-        minutes = self.end_time.minute
+        hours = self.send_end.hour
+        minutes = self.send_end.minute
         val = (hours*60+minutes)*60
         return(val)
     
