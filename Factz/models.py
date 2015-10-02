@@ -4,7 +4,6 @@ from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message
 from django.utils import timezone
 from datetime import datetime
-from math import ceil
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -12,21 +11,95 @@ class Variable(models.Model):
     
     def __str__(self):
         return self.name + "=" + self.val    
+        
+class Number(models.Model):
+    phone_number = models.CharField(max_length=15, unique=True)
+    confirmation_code = models.CharField(max_length=6, default=rand_code)
+    count = models.IntegerField(default=0)
+    confirmed = models.BooleanField(default=False)
+    last_sent = models.DateTimeField(null=True, blank=True)
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
     
+    #Optional information
+    name = models.CharField(max_length=32, blank=True, null=True)
+    email = models.CharField(max_length=32, blank=True, null=True)
+    
+    def toggle_active(self, subObj, status=None):
+        '''
+        Either set the active status of a number/subscription pair to status
+        or toggle the current status.
+        If it does not exist, create it first then activate it.
+        Returns the activeSubscription object (asObj)
+        '''
+        asObj = self.get_active_subscription(subObj)
+        if not asObj.exists():
+            asObj = activeSubscription(number=self, subscription=subObj)
+            status = True
+        else:
+            asObj = asObj.get()
+        asObj.active = status if status != None else not asObj.active
+        asObj.save()
+        return asObj
+    
+    def get_active_subscription(self, subObj):
+        return activeSubscription.objects.filter(number=self, subscription=subObj)
+    
+    def get_last_message(self, subObj = None):
+        '''
+        Get the most recent message for a given subscription OR the most recent if subObj is None
+        '''
+        if subObj != None:
+            asObj = activeSubscription.objects.filter(number=self, subscription=subObj)
+        else:
+            asObj = activeSubscription.objects.filter(number=self).order_by('-last_sent')
+        
+        if asObj.exists():
+            asObj = asObj[0]
+            out = asObj.message
+        else:
+            out = None
+            
+        return out
+    
+    def update_sent(self):
+        self.last_sent = timezone.now()
+        self.count += 1
+        self.save()
+    
+    def create(self, *args, **kwargs):
+        self.phone_number = format_number(self.phone_number)
+        
+        chk = send_test_message(self)
+        if chk[0] != 0:
+            raise ValueError(chk[1])
+            
+    def save(self, *args, **kwargs):
+        self.phone_number = format_number(self.phone_number)
+        
+        chk = send_test_message(self)
+        if chk[0] != 0:
+            raise ValueError(chk[1])
+            
+        super(Number,self).save(*args, **kwargs)
+        
+    def __str__(self):
+        return self.name if self.name != None else self.phone_number
+        
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
     count = models.IntegerField(default=0)
+    
     last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
-    #Revamp: add end_time and auto-caluclate send_delay
-    send_base = models.TimeField(default=datetime(1,1,1,16))
-    send_delay = models.PositiveIntegerField(default=465)
+    send_start = models.TimeField(default=datetime(1,1,1,16))
+    send_end =  models.TimeField(default=datetime(1,1,1,23,45))
 
-    #Could we use a text field with validation instead?
     send_monday = models.BooleanField(default=True)
     send_tuesday = models.BooleanField(default=True)
     send_wednesday = models.BooleanField(default=True)
@@ -35,13 +108,15 @@ class Subscription(models.Model):
     send_saturday = models.BooleanField(default=True)
     send_sunday = models.BooleanField(default=True)
     
-    def wait_seconds(self):
-        val = self.send_delay*60
-        return(val)
-    
     def start_time(self):
-        hours = self.send_base.hour
-        minutes = self.send_base.minute
+        hours = self.start_time.hour
+        minutes = self.start_time.minute
+        val = (hours*60+minutes)*60
+        return(val)
+        
+    def end_time(self):
+        hours = self.end_time.hour
+        minutes = self.end_time.minute
         val = (hours*60+minutes)*60
         return(val)
     
@@ -108,18 +183,23 @@ class Message(models.Model):
         unique_together = ('sheet_id', 'subscription')
         
 class sentMessage(models.Model):
+    
+    run_date = models.DateField(null=True, blank=True)
     scheduled_start =  models.DateTimeField(null=True, blank=True)
     actual_start = models.DateTimeField(null=True, blank=True)
     actual_end = models.DateTimeField(null=True, blank=True)
     actual_run = models.PositiveIntegerField(null=True, blank=True)
+    
     message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
+    
     msg_success = models.PositiveIntegerField(null=True, blank=True)
     msg_fail = models.PositiveIntegerField(null=True, blank=True)
     msg_na = models.PositiveIntegerField(null=True, blank=True)
     fu_success = models.PositiveIntegerField(null=True, blank=True)
     fu_fail = models.PositiveIntegerField(null=True, blank=True)
     fu_na = models.PositiveIntegerField(null=True, blank=True)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -127,94 +207,30 @@ class sentMessage(models.Model):
         delta = self.actual_end - self.actual_start
         self.actual_run = int(delta.total_seconds())
         self.save()
-
-class Number(models.Model):
-    phone_number = models.CharField(max_length=15, unique=True)
-    confirmation_code = models.CharField(max_length=6, default=rand_code)
-    message_cnt = models.IntegerField(default=0)
-    confirmed = models.BooleanField(default=False)
-    last_sent = models.DateTimeField(null=True, blank=True)
-    inserted_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
-    
-    #Optional information
-    name = models.CharField(max_length=32, blank=True, null=True)
-    email = models.CharField(max_length=32, blank=True, null=True)
-    
-    def toggle_active(self, subObj, status=None):
-        '''
-        Either set the active status of a number/subscription pair to status
-        or toggle the current status.
-        If it does not exist, create it first then activate it.
-        Returns the activeSubscription object (asObj)
-        '''
-        asObj = self.get_active_subscription(subObj)
-        if not asObj.exists():
-            asObj = activeSubscription(number=self, subscription=subObj)
-            status = True
-        else:
-            asObj = asObj.get()
-        asObj.active = status if status != None else not asObj.active
-        asObj.save()
-        return asObj
-    
-    def get_active_subscription(self, subObj):
-        return activeSubscription.objects.filter(number=self, subscription=subObj)
-    
-    def get_last_message(self, subObj = None):
-        '''
-        Get the most recent message for a given subscription OR the most recent if subObj is None
-        '''
-        if subObj != None:
-            asObj = activeSubscription.objects.filter(number=self, subscription=subObj)
-        else:
-            asObj = activeSubscription.objects.filter(number=self).order_by('-last_sent')
-        
-        if asObj.exists():
-            asObj = asObj[0]
-            out = asObj.message
-        else:
-            out = None
-            
-        return out
-    
-    def update_sent(self):
-        self.last_sent = timezone.now()
-        self.message_cnt += 1
-        self.save()
-    
-    def create(self, *args, **kwargs):
-        self.phone_number = format_number(self.phone_number)
-        
-        chk = send_test_message(self)
-        if chk[0] != 0:
-            raise ValueError(chk[1])
-            
-    def save(self, *args, **kwargs):
-        self.phone_number = format_number(self.phone_number)
-        
-        chk = send_test_message(self)
-        if chk[0] != 0:
-            raise ValueError(chk[1])
-            
-        super(...).save(*args, **kwargs)
-        
-    def __str__(self):
-        return self.name if self.name != None else self.phone_number
         
 class activeSubscription(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
-    message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
-    message_cnt = models.IntegerField(default=0)
+    count = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
+    
     last_sent = models.DateTimeField(null=True, blank=True)
+    last_message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
+    next_send = models.DateTimeField(null=True, blank=True)
+    
+    msg_success = models.PositiveIntegerField(null=True, blank=True)
+    msg_fail = models.PositiveIntegerField(null=True, blank=True)
+    msg_na = models.PositiveIntegerField(null=True, blank=True)
+    fu_success = models.PositiveIntegerField(null=True, blank=True)
+    fu_fail = models.PositiveIntegerField(null=True, blank=True)
+    fu_na = models.PositiveIntegerField(null=True, blank=True)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
     def update_sent(self, msgObj):
-        self.message = msgObj
-        self.message_cnt += 1
+        self.last_message = msgObj
+        self.count += 1
         self.last_sent = timezone.now()
         self.number.update_sent()
         self.save()

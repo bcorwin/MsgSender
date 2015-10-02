@@ -10,7 +10,7 @@ def set_inactive(modeladmin, request, queryset):
 class activeSubAdmin(admin.ModelAdmin):
     list_display = ['number', 'subscription', 'last_sent', 'active']
     list_filter = ['subscription', 'active', 'last_sent']
-    readonly_fields = ['message_cnt']
+    readonly_fields = ['count']
     actions = [set_active, set_inactive]
     
 class messageAdmin(admin.ModelAdmin):    
@@ -21,7 +21,7 @@ class messageAdmin(admin.ModelAdmin):
     
 class numberAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'phone_number', 'last_sent']
-    readonly_fields = ['message_cnt']
+    readonly_fields = ['count']
 
 class subAdmin(admin.ModelAdmin):
     list_display = ['name', 'last_sent', 'next_send', 'active']
