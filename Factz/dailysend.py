@@ -89,6 +89,32 @@ def dailysend():
         sleep(30)
         if msgObj.follow_up in ('', None) and res['Message'][0] == 0:
             U.send_follow_up(msgObj)       
-        
+        #Results not currently being updated on sm record
 
     return(None)
+
+'''
+
+Subscription save
+-Break if next_send is today
+-Update next_send if active, clearn next_send if inactive
+-Copy next_send to all related activeSubscriptions (even if inactive)
+-If above doesn't trigger aS save logic below, execute it manually
+-Popuate next_message if null
+
+activeSubscription save
+-(eventually, allow scheduling overrides)
+-From sugbscription, copy next_send if today or set ad hoc if run already ran
+
+1) Find all activeSubscription records with next_send values in the past
+2a) Send subscription.next_message to all relevent numbers
+2b) Send sentMessage.message to all of today's new users
+3) Set next_send on the subscription
+4) Set next_message on the subscription
+
+
+
+
+
+'''
+
