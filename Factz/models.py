@@ -16,7 +16,6 @@ class Variable(models.Model):
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
-    count = models.IntegerField(default=0)
     last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
@@ -65,7 +64,6 @@ class Subscription(models.Model):
 
     def update_sent(self):
         self.last_sent = timezone.now()
-        self.count += 1
         self.save()
         
     def __str__(self):
@@ -77,7 +75,6 @@ class Message(models.Model):
     follow_up = models.CharField(max_length=160)
     source = models.CharField(max_length=160)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
-    count = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
@@ -92,7 +89,6 @@ class Message(models.Model):
     get_rating.short_description = "Rating"
     
     def update_sent(self):
-        self.count += 1
         self.last_sent = timezone.now()
         self.save()
     
@@ -131,7 +127,6 @@ class sentMessage(models.Model):
 class Number(models.Model):
     phone_number = models.CharField(max_length=15, unique=True)
     confirmation_code = models.CharField(max_length=6, default=rand_code)
-    message_cnt = models.IntegerField(default=0)
     confirmed = models.BooleanField(default=False)
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
@@ -180,7 +175,6 @@ class Number(models.Model):
     
     def update_sent(self):
         self.last_sent = timezone.now()
-        self.message_cnt += 1
         self.save()
     
     def create(self, *args, **kwargs):
@@ -206,7 +200,6 @@ class activeSubscription(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
-    message_cnt = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
@@ -214,7 +207,6 @@ class activeSubscription(models.Model):
     
     def update_sent(self, msgObj):
         self.message = msgObj
-        self.message_cnt += 1
         self.last_sent = timezone.now()
         self.number.update_sent()
         self.save()
