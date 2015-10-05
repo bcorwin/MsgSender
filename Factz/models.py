@@ -125,11 +125,16 @@ class Number(models.Model):
         asObj = self.get_active_subscription(subObj)
         if not asObj.exists():
             asObj = activeSubscription(number=self, subscription=subObj)
-            status = True
+            asObj.active = True
+            asObj.save()
+            #When creating the activeSub, add to sentMessage
+            #To do: get last sent message. How best to do that?
+            smObj = sentMessage(active_subscription=asObj, message=None, next_send=timezone.now())
+            smObj.save()
         else:
             asObj = asObj.get()
-        asObj.active = status if status != None else not asObj.active
-        asObj.save()
+            asObj.active = status if status != None else not asObj.active
+            asObj.save()
         return asObj
     
     def get_active_subscription(self, subObj):
@@ -207,12 +212,12 @@ class activeSubscription(models.Model):
         else:
             res = (-2, "No follow up.")
         return {"Followup":res}
-    
-    class Meta:
-        unique_together = ('number', 'subscription')
-    
+        
     def __str__(self):
         return str(self.number) + " " + str(self.subscription) + " (" + str(self.active) + ")"
+        
+    class Meta:
+        unique_together = ('number', 'subscription')
 
 class dailySend(models.Model):
     subscription = models.ForeignKey(Subscription)
