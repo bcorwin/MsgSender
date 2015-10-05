@@ -162,28 +162,27 @@ def validate_save_append(obj, out, name="New", addl=None):
         out["Fail"].append((obj, e))
     return out
 
-def send_to_all(subObj, msgObj=None):
+def send_to_all(smObjs):
     '''
-    Sends a message to all phone numbers with active subscriptions for a given subscription.
+    smObjs should be a list of sentMessage objects
     '''
-    
-    if msgObj == None:
-        msgObj = next_message(subObj)
-    user_list = activeSubscription.objects.filter(subscription=subObj, active=True)
-    
     texts = []
     msg_status = {'succ':0,'fail':0,'na':0}
     fu_status =  {'succ':0,'fail':0,'na':0}
     
-    for user in user_list:
+    for smObj in smObjs:
+        user = smObj.active_subscription
         add = {"Number":user}
+        #To do: deal with when message is null and we want to send a custom message instead.
+        msgObj = smObj.message
         res = user.send_message(msgObj)
         msg_status = update_status(msg_status, res, 'Message')
         add.update(res)
         texts.append(add)
         
-    msgObj.update_sent()
-    subObj.update_sent()
+    #To do: This needs to be moved, but to where?
+    #msgObj.update_sent()
+    #subObj.update_sent()
         
     sleep(30)
     
@@ -194,7 +193,7 @@ def send_to_all(subObj, msgObj=None):
             f_res = {"Followup":(-2, "No follow up.")}
             text.update(f_res)
         elif errCode == 0:
-            #Only send the follow up if the the message was sucessful
+            #Only send the follow up if the the message was successful
             f_res = asObj.send_follow_up(msgObj)
             text.update(f_res)
         else:
