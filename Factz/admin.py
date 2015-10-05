@@ -26,10 +26,6 @@ class subAdmin(admin.ModelAdmin):
     
 class varAdmin(admin.ModelAdmin):
     list_display = ['name', 'val']
-    
-class smAdmin(admin.ModelAdmin):
-    list_display = ['scheduled_start', 'actual_start', 'actual_end', 'actual_run', 'message', 'subscription']
-    list_filter = ['subscription', 'scheduled_start', 'actual_run']
 
 class ratingAdmin(admin.ModelAdmin):
     list_display = ['number', 'message', 'rating']
@@ -40,5 +36,5 @@ admin.site.register(Number, numberAdmin)
 admin.site.register(Subscription, subAdmin)
 admin.site.register(Variable, varAdmin)
 admin.site.register(activeSubscription, activeSubAdmin)
-admin.site.register(sentMessage, smAdmin)
+admin.site.register(sentMessage)
 admin.site.register(Rating, ratingAdmin)

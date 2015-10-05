@@ -103,27 +103,6 @@ class Message(models.Model):
     class Meta:
         unique_together = ('sheet_id', 'subscription')
         
-class sentMessage(models.Model):
-    scheduled_start =  models.DateTimeField(null=True, blank=True)
-    actual_start = models.DateTimeField(null=True, blank=True)
-    actual_end = models.DateTimeField(null=True, blank=True)
-    actual_run = models.PositiveIntegerField(null=True, blank=True)
-    message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
-    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
-    msg_success = models.PositiveIntegerField(null=True, blank=True)
-    msg_fail = models.PositiveIntegerField(null=True, blank=True)
-    msg_na = models.PositiveIntegerField(null=True, blank=True)
-    fu_success = models.PositiveIntegerField(null=True, blank=True)
-    fu_fail = models.PositiveIntegerField(null=True, blank=True)
-    fu_na = models.PositiveIntegerField(null=True, blank=True)
-    inserted_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
-    
-    def calc_runtime(self):
-        delta = self.actual_end - self.actual_start
-        self.actual_run = int(delta.total_seconds())
-        self.save()
-
 class Number(models.Model):
     phone_number = models.CharField(max_length=15, unique=True)
     confirmation_code = models.CharField(max_length=6, default=rand_code)
@@ -235,6 +214,22 @@ class activeSubscription(models.Model):
     def __str__(self):
         return str(self.number) + " " + str(self.subscription) + " (" + str(self.active) + ")"
 
+class dailySend(models.Model):
+    subscription = models.ForeignKey(Subscription)
+    message = models.ForeignKey(Message)
+    next_send_date = models.DateField(default=datetime(2000,1,1))
+    
+class sentMessage(models.Model):
+    active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None)
+    message = models.ForeignKey(Message, null=True, blank=True, default=None)
+    
+    next_send = models.DateTimeField(default=datetime(2000,1,1))
+    next_send_date = models.DateField(default=datetime(2000,1,1))
+    attempted = models.BooleanField(default=False)
+    sent_time = models.DateTimeField(default=datetime(2000,1,1))
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+        
 class Rating(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, on_delete=models.PROTECT)
