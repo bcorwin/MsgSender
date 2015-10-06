@@ -34,6 +34,11 @@ class Subscription(models.Model):
     send_saturday = models.BooleanField(default=True)
     send_sunday = models.BooleanField(default=True)
     
+    def get_last_message(self):
+        out = dailySend.objects.all().filter(subscription=self).order_by("-next_send_date")
+        out = out[0].message if out.exists() else None
+        return(out)
+    
     def wait_seconds(self):
         val = self.send_delay*60
         return(val)
@@ -209,11 +214,11 @@ class activeSubscription(models.Model):
         return {"Followup":res}
     
     def save(self, *args, **kwargs):
+        is_new = True if not self.pk else False
         super(activeSubscription, self).save(*args, **kwargs)
-        if not self.pk:
-            #When creating the activeSub, add to sentMessage
-            #To do: get last sent message. How best to do that?
-            smObj = sentMessage(active_subscription=self, message=None, next_send=timezone.now())
+        if is_new:
+            msgObj = self.subscription.get_last_message()
+            smObj = sentMessage(active_subscription=self, message=msgObj, next_send=timezone.now())
             smObj.save()
         
     def __str__(self):
@@ -232,10 +237,14 @@ class sentMessage(models.Model):
     message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
     next_send = models.DateTimeField()
     next_send_date = models.DateField()
-    sent_time = models.DateTimeField()
+    sent_time = models.DateTimeField(default=None, null=True, blank=True)
     attempted = models.BooleanField(default=False)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        self.next_send_date = self.next_send.date()
+        super(sentMessage, self).save(*args, **kwargs)
         
 class Rating(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)
