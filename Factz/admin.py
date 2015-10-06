@@ -31,11 +31,20 @@ class ratingAdmin(admin.ModelAdmin):
     list_display = ['number', 'message', 'rating']
     list_filter = ['number', 'rating']
     
+class dsAdmin(admin.ModelAdmin):
+    list_display = ['subscription', 'next_send_date', 'message']
+    list_filter = ['subscription', 'next_send_date']
+    ordering = ['-next_send_date']
+    
+class smAdmin(admin.ModelAdmin):
+    list_display = ['active_subscription', 'next_send', 'sent_time', 'message', 'attempted']
+    list_filter = ['next_send_date', 'sent_time', 'attempted']
+    
 admin.site.register(Message, messageAdmin)
 admin.site.register(Number, numberAdmin)
 admin.site.register(Subscription, subAdmin)
 admin.site.register(Variable, varAdmin)
 admin.site.register(activeSubscription, activeSubAdmin)
-admin.site.register(sentMessage)
+admin.site.register(sentMessage, smAdmin)
 admin.site.register(Rating, ratingAdmin)
-admin.site.register(dailySend)
+admin.site.register(dailySend, dsAdmin)
