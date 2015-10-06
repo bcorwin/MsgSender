@@ -225,16 +225,15 @@ class activeSubscription(models.Model):
 class dailySend(models.Model):
     subscription = models.ForeignKey(Subscription)
     message = models.ForeignKey(Message)
-    next_send_date = models.DateField(default=datetime(2000,1,1))
+    next_send_date = models.DateField()
     
 class sentMessage(models.Model):
     active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
-    
-    next_send = models.DateTimeField(default=datetime(2000,1,1))
-    next_send_date = models.DateField(default=datetime(2000,1,1))
+    next_send = models.DateTimeField()
+    next_send_date = models.DateField()
+    sent_time = models.DateTimeField()
     attempted = models.BooleanField(default=False)
-    sent_time = models.DateTimeField(default=datetime(2000,1,1))
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
         
