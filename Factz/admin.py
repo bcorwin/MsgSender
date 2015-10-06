@@ -7,9 +7,22 @@ def set_active(modeladmin, request, queryset):
 def set_inactive(modeladmin, request, queryset):
     queryset.update(active=False)
 
+class sentMsgInline(admin.TabularInline):
+    model = sentMessage
+    fields = ['next_send', 'sent_time', 'message', 'rating', 'attempted']
+    readonly_fields = ['next_send', 'sent_time', 'message', 'rating', 'attempted']
+    extra = 0
+    
+class activeSubInline(admin.TabularInline):
+    model = activeSubscription
+    fields = ['subscription', 'message', 'last_sent', 'active']
+    readonly_fields = ['subscription', 'message', 'last_sent']
+    extra = 0
+
 class activeSubAdmin(admin.ModelAdmin):
     list_display = ['number', 'subscription', 'last_sent', 'active']
     list_filter = ['subscription', 'active', 'last_sent']
+    inlines = [sentMsgInline]
     actions = [set_active, set_inactive]
     
 class messageAdmin(admin.ModelAdmin):    
@@ -19,6 +32,7 @@ class messageAdmin(admin.ModelAdmin):
     
 class numberAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'phone_number', 'last_sent']
+    inlines = [activeSubInline]
 
 class subAdmin(admin.ModelAdmin):
     list_display = ['name', 'last_sent', 'next_send', 'active']
