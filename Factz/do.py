@@ -1,5 +1,5 @@
 #Use do to store functions that may depend on models
-from Factz.models import Number, Variable, Message, activeSubscription, Subscription, Rating
+from Factz.models import Number, Variable, Message, activeSubscription, Subscription
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -85,15 +85,17 @@ def add_number(num):
         num.save()
     return num
     
-def add_rating(numObj, msgObj, rating):
+def add_rating(numObj, rating):
     '''
     Adds a rating (and validates it)
     '''
-    R = Rating(number=numObj, message=msgObj, rating=rating)
+    R = numObj.get_last_sm()
+    if R == None: return False
     try:
+        R.rating = rating
         R.full_clean()
         R.save()
-        return None
+        return True
     except ValidationError as e:
         return e
 

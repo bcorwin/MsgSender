@@ -86,7 +86,7 @@ class Message(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     
     def get_rating(self):
-        ratings = [r.rating for r in Rating.objects.filter(message=self)]
+        ratings = [r.rating for r in sentMessage.objects.filter(message=self).exclude(rating__isnull=True)]
         if len(ratings) > 0:
             return round(sum(ratings)/len(ratings), 1)
         else:
@@ -157,6 +157,17 @@ class Number(models.Model):
             
         return out
     
+    def get_last_sm(self):
+        out = None
+        asObj = activeSubscription.objects.filter(number=self).exclude(last_sent__isnull=True).order_by('-last_sent')
+        if asObj.exists():
+            asObj = asObj[0]
+            smObj = sentMessage.objects.all().filter(active_subscription=asObj).exclude(sent_time__isnull=True).order_by('sent_time')
+            if smObj.exists():
+                out = smObj[0]
+        return(out)
+        
+    
     def update_sent(self):
         self.last_sent = timezone.now()
         self.save()
@@ -178,7 +189,7 @@ class activeSubscription(models.Model):
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
     active = models.BooleanField(default=True)
-    last_sent = models.DateTimeField(null=True, blank=True)
+    last_sent = models.DateTimeField(default = None, null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -232,16 +243,10 @@ class sentMessage(models.Model):
     next_send_date = models.DateField()
     sent_time = models.DateTimeField(default=None, null=True, blank=True)
     attempted = models.BooleanField(default=False)
+    rating = models.IntegerField(default=None, null=True, blank=True, validators = [MinValueValidator(1), MaxValueValidator(5)])
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
     def save(self, *args, **kwargs):
         self.next_send_date = self.next_send.date()
         super(sentMessage, self).save(*args, **kwargs)
-        
-class Rating(models.Model):
-    number = models.ForeignKey(Number, on_delete=models.PROTECT)
-    message = models.ForeignKey(Message, on_delete=models.PROTECT)
-    rating = models.IntegerField(validators = [MinValueValidator(1), MaxValueValidator(5)])
-    inserted_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
