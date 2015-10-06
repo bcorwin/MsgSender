@@ -5,7 +5,7 @@ commands = {
             "subscribe":    ["subscribe *(.*)", "add *(.*)"],
             "unsubscribe":  ["unsubscribe *(.*)", "leave *(.*)", "stop *(.*)"],
             "source":       ["source()", "sauce()"],
-            "rate":         ["rate *(\d*)", "rating *(\d*)", "(\d+)"]
+            "rate":         ["rate *(\d*)", "rating *(\d*)", "(\d+)"],
             }
 
 def extract_command(text, commands):
@@ -22,7 +22,6 @@ def extract_command(text, commands):
                 parm = pattern.match(text).groups()[0]
                 out[0] = cname
                 out[1] = parm if parm != '' else None
-                print(reg)
                 break
     return out
     
