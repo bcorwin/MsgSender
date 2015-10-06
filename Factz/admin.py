@@ -11,12 +11,14 @@ class sentMsgInline(admin.TabularInline):
     model = sentMessage
     fields = ['next_send', 'sent_time', 'message', 'rating', 'attempted']
     readonly_fields = ['next_send', 'sent_time', 'message', 'rating', 'attempted']
+    show_change_link = True
     extra = 0
     
 class activeSubInline(admin.TabularInline):
     model = activeSubscription
     fields = ['subscription', 'message', 'last_sent', 'active']
     readonly_fields = ['subscription', 'message', 'last_sent']
+    show_change_link = True
     extra = 0
 
 class activeSubAdmin(admin.ModelAdmin):
