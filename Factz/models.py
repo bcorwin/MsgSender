@@ -18,14 +18,13 @@ class Subscription(models.Model):
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
-    #Revamp: add end_time and auto-caluclate send_delay
-    send_base = models.TimeField(default=datetime(1,1,1,16))
-    send_delay = models.PositiveIntegerField(default=465)
+    send_start = models.TimeField(default=datetime(1,1,1,16))
+    send_end =  models.TimeField(default=datetime(1,1,1,23,45))
 
-    #Could we use a text field with validation instead?
     send_monday = models.BooleanField(default=True)
     send_tuesday = models.BooleanField(default=True)
     send_wednesday = models.BooleanField(default=True)
@@ -44,8 +43,14 @@ class Subscription(models.Model):
         return(val)
     
     def start_time(self):
-        hours = self.send_base.hour
-        minutes = self.send_base.minute
+        hours = self.send_start.hour
+        minutes = self.send_start.minute
+        val = (hours*60+minutes)*60
+        return(val)
+    
+    def end_time(self):
+        hours = self.send_end.hour
+        minutes = self.send_end.minute
         val = (hours*60+minutes)*60
         return(val)
     
@@ -82,6 +87,7 @@ class Message(models.Model):
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -113,6 +119,7 @@ class Number(models.Model):
     confirmation_code = models.CharField(max_length=6, default=rand_code)
     confirmed = models.BooleanField(default=False)
     last_sent = models.DateTimeField(null=True, blank=True)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -190,6 +197,7 @@ class activeSubscription(models.Model):
     message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(default = None, null=True, blank=True)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
@@ -233,20 +241,22 @@ class activeSubscription(models.Model):
 
 class dailySend(models.Model):
     subscription = models.ForeignKey(Subscription)
-    message = models.ForeignKey(Message)
+    message = models.ForeignKey(Message,null=True,blank=True)
     next_send_date = models.DateField()
     
 class sentMessage(models.Model):
     active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
-    next_send = models.DateTimeField()
+    next_send = models.DateTimeField(null=True,blank=True)
     next_send_date = models.DateField()
     sent_time = models.DateTimeField(default=None, null=True, blank=True)
     attempted = models.BooleanField(default=False)
     rating = models.IntegerField(default=None, null=True, blank=True, validators = [MinValueValidator(1), MaxValueValidator(5)])
+
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
     def save(self, *args, **kwargs):
-        self.next_send_date = self.next_send.date()
+        if self.next_send is not None:
+            self.next_send_date = self.next_send.date()
         super(sentMessage, self).save(*args, **kwargs)
