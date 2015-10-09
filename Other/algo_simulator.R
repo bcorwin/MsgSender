@@ -77,10 +77,10 @@ run_sim <- function(n, days, func = parse(text="ages")) {
 }
 
 num_simulations <- 4
-out1 <-run_sim(100, 600)
-out2 <-run_sim(100, 600, func = parse(text="round(1.1^ages)"))
-out3 <-run_sim(100, 600, func = parse(text="10 * ages"))
-out4 <-run_sim(100, 600, func = parse(text="ages^10"))
+out1 <-run_sim(30, 100)
+out2 <-run_sim(30, 100, func = parse(text="round(1.1^ages)"))
+out3 <-run_sim(30, 100, func = parse(text="10 * ages"))
+out4 <-run_sim(30, 100, func = parse(text="ages^10"))
 
 ymax <- max(
   sapply(seq(1,num_simulations), function(x) {

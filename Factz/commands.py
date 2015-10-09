@@ -1,7 +1,12 @@
 from Factz.do import sub_exist, add_number, number_exist, add_rating
 import re
 
-commands = ["subscribe", "unsubscribe", "source", "rate"]
+commands = {
+            "subscribe":    ["subscribe *(.*)", "add *(.*)"],
+            "unsubscribe":  ["unsubscribe *(.*)", "leave *(.*)", "stop *(.*)"],
+            "source":       ["source()", "sauce()"],
+            "rate":         ["rate *(\d*)", "rating *(\d*)", "(\d+)"],
+            }
 
 def extract_command(text, commands):
     '''
@@ -9,13 +14,15 @@ def extract_command(text, commands):
     "COMMAND [PARAMETERS]" and outputs the first match it finds
     '''
     out = [None, None]
-    for c in commands:
-        pattern = re.compile(c + " *(.*)", re.IGNORECASE)
-        if pattern.match(text):
-            parm = pattern.match(text).groups()[0]
-            out[0] = c
-            out[1] = parm if parm != '' else None
-            break
+    for cname in commands:
+        reg_list = commands[cname]
+        for reg in reg_list:
+            pattern = re.compile(reg, re.IGNORECASE)
+            if pattern.match(text):
+                parm = pattern.match(text).groups()[0]
+                out[0] = cname
+                out[1] = parm if parm != '' else None
+                break
     return out
     
 def extract_subscription(text):
@@ -65,15 +72,14 @@ def set_rating(numObj, rating):
     '''
     Set the rating and generate a response
     '''
-    msgObj = numObj.get_last_message()
-    if msgObj is not None:
-        rate = add_rating(numObj, msgObj, rating)
-        if rate == None:
-            return "Thanks for the rating!"
-        else:
-            return "Please submit a rating 1 through 5."
+    rate = add_rating(numObj, rating)
+    if rate == True:
+        out = "Thanks for the rating!"
+    elif rate == False:
+        out = "You have yet to receive a fact."
     else:
-        return "You have yet to receive a fact."
+        out = "Please submit a rating 1 through 5."
+    return(out)
         
 def update_user(message, numObj):
     '''

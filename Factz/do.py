@@ -1,5 +1,5 @@
 #Use do to store functions that may depend on models
-from Factz.models import Number, Variable, Message, activeSubscription, Subscription, Rating
+from Factz.models import Number, Variable, Message, activeSubscription, Subscription
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -85,15 +85,17 @@ def add_number(num):
         num.save()
     return num
     
-def add_rating(numObj, msgObj, rating):
+def add_rating(numObj, rating):
     '''
     Adds a rating (and validates it)
     '''
-    R = Rating(number=numObj, message=msgObj, rating=rating)
+    R = numObj.get_last_sm()
+    if R == None: return False
     try:
+        R.rating = rating
         R.full_clean()
         R.save()
-        return None
+        return True
     except ValidationError as e:
         return e
 
@@ -162,28 +164,27 @@ def validate_save_append(obj, out, name="New", addl=None):
         out["Fail"].append((obj, e))
     return out
 
-def send_to_all(subObj, msgObj=None):
+def send_to_all(smObjs):
     '''
-    Sends a message to all phone numbers with active subscriptions for a given subscription.
+    smObjs should be a list of sentMessage objects
     '''
-    
-    if msgObj == None:
-        msgObj = next_message(subObj)
-    user_list = activeSubscription.objects.filter(subscription=subObj, active=True)
-    
     texts = []
     msg_status = {'succ':0,'fail':0,'na':0}
     fu_status =  {'succ':0,'fail':0,'na':0}
     
-    for user in user_list:
+    for smObj in smObjs:
+        user = smObj.active_subscription
         add = {"Number":user}
+        #To do: deal with when message is null and we want to send a custom message instead.
+        msgObj = smObj.message
         res = user.send_message(msgObj)
         msg_status = update_status(msg_status, res, 'Message')
         add.update(res)
         texts.append(add)
         
-    msgObj.update_sent()
-    subObj.update_sent()
+    #To do: This needs to be moved, but to where?
+    #msgObj.update_sent()
+    #subObj.update_sent()
         
     sleep(30)
     
@@ -194,7 +195,7 @@ def send_to_all(subObj, msgObj=None):
             f_res = {"Followup":(-2, "No follow up.")}
             text.update(f_res)
         elif errCode == 0:
-            #Only send the follow up if the the message was sucessful
+            #Only send the follow up if the the message was successful
             f_res = asObj.send_follow_up(msgObj)
             text.update(f_res)
         else:

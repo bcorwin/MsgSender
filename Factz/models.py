@@ -89,8 +89,6 @@ class Number(models.Model):
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
-    count = models.IntegerField(default=0)
-    
     last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
     
@@ -107,6 +105,15 @@ class Subscription(models.Model):
     send_friday = models.BooleanField(default=True)
     send_saturday = models.BooleanField(default=True)
     send_sunday = models.BooleanField(default=True)
+    
+    def get_last_message(self):
+        out = dailySend.objects.all().filter(subscription=self).order_by("-next_send_date")
+        out = out[0].message if out.exists() else None
+        return(out)
+    
+    def wait_seconds(self):
+        val = self.send_delay*60
+        return(val)
     
     def start_time(self):
         hours = self.send_start.hour
@@ -140,7 +147,6 @@ class Subscription(models.Model):
 
     def update_sent(self):
         self.last_sent = timezone.now()
-        self.count += 1
         self.save()
         
     def __str__(self):
@@ -152,14 +158,13 @@ class Message(models.Model):
     follow_up = models.CharField(max_length=160)
     source = models.CharField(max_length=160)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
-    count = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
     def get_rating(self):
-        ratings = [r.rating for r in Rating.objects.filter(message=self)]
+        ratings = [r.rating for r in sentMessage.objects.filter(message=self).exclude(rating__isnull=True)]
         if len(ratings) > 0:
             return round(sum(ratings)/len(ratings), 1)
         else:
@@ -167,7 +172,6 @@ class Message(models.Model):
     get_rating.short_description = "Rating"
     
     def update_sent(self):
-        self.count += 1
         self.last_sent = timezone.now()
         self.save()
     
@@ -211,26 +215,14 @@ class sentMessage(models.Model):
 class activeSubscription(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
-    count = models.IntegerField(default=0)
+    message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
     active = models.BooleanField(default=True)
-    
-    last_sent = models.DateTimeField(null=True, blank=True)
-    last_message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
-    next_send = models.DateTimeField(null=True, blank=True)
-    
-    msg_success = models.PositiveIntegerField(null=True, blank=True)
-    msg_fail = models.PositiveIntegerField(null=True, blank=True)
-    msg_na = models.PositiveIntegerField(null=True, blank=True)
-    fu_success = models.PositiveIntegerField(null=True, blank=True)
-    fu_fail = models.PositiveIntegerField(null=True, blank=True)
-    fu_na = models.PositiveIntegerField(null=True, blank=True)
-    
+    last_sent = models.DateTimeField(default = None, null=True, blank=True)
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     
     def update_sent(self, msgObj):
-        self.last_message = msgObj
-        self.count += 1
+        self.message = msgObj
         self.last_sent = timezone.now()
         self.number.update_sent()
         self.save()
@@ -253,15 +245,36 @@ class activeSubscription(models.Model):
             res = (-2, "No follow up.")
         return {"Followup":res}
     
-    class Meta:
-        unique_together = ('number', 'subscription')
-    
+    def save(self, *args, **kwargs):
+        is_new = True if not self.pk else False
+        super(activeSubscription, self).save(*args, **kwargs)
+        if is_new:
+            msgObj = self.subscription.get_last_message()
+            smObj = sentMessage(active_subscription=self, message=msgObj, next_send=timezone.now())
+            smObj.save()
+        
     def __str__(self):
         return str(self.number) + " " + str(self.subscription) + " (" + str(self.active) + ")"
+        
+    class Meta:
+        unique_together = ('number', 'subscription')
 
-class Rating(models.Model):
-    number = models.ForeignKey(Number, on_delete=models.PROTECT)
-    message = models.ForeignKey(Message, on_delete=models.PROTECT)
-    rating = models.IntegerField(validators = [MinValueValidator(1), MaxValueValidator(5)])
+class dailySend(models.Model):
+    subscription = models.ForeignKey(Subscription)
+    message = models.ForeignKey(Message)
+    next_send_date = models.DateField()
+    
+class sentMessage(models.Model):
+    active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None, on_delete=models.PROTECT)
+    message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
+    next_send = models.DateTimeField()
+    next_send_date = models.DateField()
+    sent_time = models.DateTimeField(default=None, null=True, blank=True)
+    attempted = models.BooleanField(default=False)
+    rating = models.IntegerField(default=None, null=True, blank=True, validators = [MinValueValidator(1), MaxValueValidator(5)])
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        self.next_send_date = self.next_send.date()
+        super(sentMessage, self).save(*args, **kwargs)
