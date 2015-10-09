@@ -56,14 +56,16 @@ def dailysend():
                     sM.save()
 
     #Now try to send any eligible sentMessage records
-    toSend = sentMessage.objects.filter(next_send_date__gte=today,next_send__lt=now)
-    for dS in toSend:
-        if toSend.last_sent is not None: continue
-        if toSend.active_subscription.active == False: continue
-        if toSend.active_subscription.subscription.active == False: continue
-        do.send_to_all(dS)
-        dS.attempted = True
-        dS.save()        
+    sentMessages = []
+    toSend = sentMessage.objects.filter(next_send_date=today,next_send__lt=now)
+    for sM in toSend:
+        if sM.sent_time is not None: continue
+        if sM.active_subscription.active == False: continue
+        if sM.active_subscription.subscription.active == False: continue
+        sentMessages.append(sM)
+        sM.attempted = True
+        sM.save()        
+    do.send_to_all(sentMessages)
 
     return(None)
     
