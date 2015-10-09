@@ -242,11 +242,18 @@ class activeSubscription(models.Model):
 class dailySend(models.Model):
     subscription = models.ForeignKey(Subscription)
     message = models.ForeignKey(Message,null=True,blank=True)
+    next_send = models.DateTimeField(null=True,blank=True)
     next_send_date = models.DateField()
+    
+    def save(self, *args, **kwargs):
+        if self.next_send is not None:
+            self.next_send_date = self.next_send.date()
+        super(dailySend, self).save(*args, **kwargs)
     
 class sentMessage(models.Model):
     active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
+    daily_send = models.ForeignKey(dailySend, null=True, blank=True, default=None, on_delete=models.PROTECT)
     next_send = models.DateTimeField(null=True,blank=True)
     next_send_date = models.DateField()
     sent_time = models.DateTimeField(default=None, null=True, blank=True)

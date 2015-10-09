@@ -4,7 +4,7 @@ from django.utils import timezone
 from datetime import datetime
 from random import randint
 
-def new_send_time(S, activeSubscription):
+def set_send_time(S, dailySend):
     
     now = timezone.now()
     
@@ -20,6 +20,18 @@ def new_send_time(S, activeSubscription):
     minutes = remainder//60
     send_time = datetime(now.year,now.month,now.day,hours,minutes)
     send_time = timezone.make_aware(send_time)
+    
+    S.next_send = send_time
+    dailySend.next_send = send_time
+    
+    S.save()
+    dailySend.save()
+    
+    return(send_time)
+
+def get_send_time(dailySend, activeSubscription):
+    
+    send_time = dailySend.next_send
     
     return(send_time)
 
@@ -45,14 +57,15 @@ def dailysend():
             msg = do.next_message(S)
             dS.message = msg
             dS.save()
-
+            set_send_time(S,dS)
+            
             #If the dailySend is new, create sentMessages for all activeSubscriptions
             activeSubs = activeSubscription.objects.filter(subscription=S,active=True)
             for aS in activeSubs:
-                [sM,new] = sentMessage.objects.get_or_create(active_subscription=aS,message=msg,next_send_date=today)
+                [sM,new] = sentMessage.objects.get_or_create(active_subscription=aS,message=msg,next_send_date=today,daily_send=dS)
                 if new:
                     sM.attempted = False
-                    sM.next_send = new_send_time(S,aS)
+                    sM.next_send = get_send_time(dS,aS)
                     sM.save()
 
     #Now try to send any eligible sentMessage records
@@ -65,7 +78,7 @@ def dailysend():
         sentMessages.append(sM)
         sM.attempted = True
         sM.save()        
-    do.send_to_all(sentMessages)
+    if sentMessages != []: do.send_to_all(sentMessages)
 
     return(None)
     

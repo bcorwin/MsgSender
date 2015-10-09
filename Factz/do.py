@@ -168,6 +168,8 @@ def send_to_all(smObjs):
     '''
     smObjs should be a list of sentMessage objects
     '''
+    if smObjs == [] or smObjs == None: return(None)    
+    
     texts = []
     msg_status = {'succ':0,'fail':0,'na':0}
     fu_status =  {'succ':0,'fail':0,'na':0}
