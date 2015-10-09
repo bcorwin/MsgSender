@@ -4,39 +4,8 @@ from django.utils import timezone
 from datetime import datetime
 from random import randint
 
-def set_send_time(S, dailySend):
-    
-    now = timezone.now()
-    
-    #Default start time/duration -> 16:00 - 23:45 UTC
-    start_time = S.start_time()
-    end_time = S.end_time()
-    if end_time > 85500: end_time = 85500 #Never send after 23:45 UTC
-    delay = randint(start_time,end_time) #Delay in seconds
-
-    #Transform the delay from seconds to minutes, dropping the remainder
-    hours = delay//3600
-    remainder = delay%3600
-    minutes = remainder//60
-    send_time = datetime(now.year,now.month,now.day,hours,minutes)
-    send_time = timezone.make_aware(send_time)
-    
-    S.next_send = send_time
-    dailySend.next_send = send_time
-    
-    S.save()
-    dailySend.save()
-    
-    return(send_time)
-
-def get_send_time(dailySend, activeSubscription):
-    
-    send_time = dailySend.next_send
-    
-    return(send_time)
-
 def dailysend():
-    
+
     now = timezone.now()
     #today = now.replace(hour=0,minute=0,second=0,microsecond=0)
     today = now.date()
@@ -44,7 +13,7 @@ def dailysend():
     #Fetch active subscriptions and loop
     subs = Subscription.objects.filter(active=True)
     for S in subs:
-        
+
         #First, quit if today is invalid for the subscription
         if not S.check_today(): continue
 
@@ -58,7 +27,7 @@ def dailysend():
             dS.message = msg
             dS.save()
             set_send_time(S,dS)
-            
+
             #If the dailySend is new, create sentMessages for all activeSubscriptions
             activeSubs = activeSubscription.objects.filter(subscription=S,active=True)
             for aS in activeSubs:
@@ -77,8 +46,37 @@ def dailysend():
         if sM.active_subscription.subscription.active == False: continue
         sentMessages.append(sM)
         sM.attempted = True
-        sM.save()        
+        sM.save()
     if sentMessages != []: do.send_to_all(sentMessages)
 
     return(None)
-    
+
+def set_send_time(S, dailySend):
+
+    now = timezone.now()
+
+    start_time = S.start_time()
+    end_time = S.end_time()
+    if end_time > 85500: end_time = 85500 #Never send after 23:45 UTC
+    delay = randint(start_time,end_time) #Delay in seconds
+
+    #Transform the delay from seconds to minutes, dropping the remainder
+    hours = delay//3600
+    remainder = delay%3600
+    minutes = remainder//60
+    send_time = datetime(now.year,now.month,now.day,hours,minutes)
+    send_time = timezone.make_aware(send_time)
+
+    S.next_send = send_time
+    dailySend.next_send = send_time
+
+    S.save()
+    dailySend.save()
+
+    return(send_time)
+
+def get_send_time(dailySend, activeSubscription):
+
+    send_time = dailySend.next_send
+
+    return(send_time)
