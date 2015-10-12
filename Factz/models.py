@@ -233,7 +233,7 @@ class activeSubscription(models.Model):
             smObj.save()
 
     def __str__(self):
-        return str(self.number) + " " + str(self.subscription) + " (" + str(self.active) + ")"
+        return str(self.number) + " (" + str(self.subscription.name) + ")"
 
     class Meta:
         unique_together = ('number', 'subscription')
@@ -248,6 +248,9 @@ class dailySend(models.Model):
         if self.next_send is not None:
             self.next_send_date = self.next_send.date()
         super(dailySend, self).save(*args, **kwargs)
+        
+    def __str__(self):
+        return  self.subscription.name + " (" + str(self.next_send_date) + ")"
 
 class sentMessage(models.Model):
     active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None, on_delete=models.PROTECT)
@@ -266,3 +269,6 @@ class sentMessage(models.Model):
         if self.next_send is not None:
             self.next_send_date = self.next_send.date()
         super(sentMessage, self).save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.active_subscription.subscription.name + " (" + str(self.next_send_date) + ")"
