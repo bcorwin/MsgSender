@@ -15,7 +15,6 @@ class Variable(models.Model):
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
-    last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
 
     inserted_date = models.DateTimeField(auto_now_add=True)
@@ -70,10 +69,6 @@ class Subscription(models.Model):
         elif today == 6:
             val = self.send_sunday
         return(val)
-
-    def update_sent(self):
-        self.last_sent = timezone.now()
-        self.save()
 
     def __str__(self):
         return self.name

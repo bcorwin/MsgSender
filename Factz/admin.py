@@ -38,8 +38,8 @@ class numberAdmin(admin.ModelAdmin):
     inlines = [activeSubInline]
 
 class subAdmin(admin.ModelAdmin):
-    list_display = ['name', 'last_sent', 'next_send', 'active']
-    list_filter = ['active', 'last_sent', 'next_send']
+    list_display = ['name', 'next_send', 'active']
+    list_filter = ['active', 'next_send']
     
 class varAdmin(admin.ModelAdmin):
     list_display = ['name', 'val']
