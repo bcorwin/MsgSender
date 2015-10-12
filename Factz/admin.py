@@ -47,6 +47,7 @@ class varAdmin(admin.ModelAdmin):
 class dsAdmin(admin.ModelAdmin):
     list_display = ['subscription', 'next_send_date', 'message']
     list_filter = ['subscription', 'next_send_date']
+    inlines = [sentMsgInline]
     ordering = ['-next_send_date']
     
 class smAdmin(admin.ModelAdmin):
