@@ -184,13 +184,14 @@ def send_to_all(smObjs):
         if res["Message"][0] == 0:
             smObj.sent_time = timezone.now()
             smObj.save()
+            msgObj.update_sent()
         msg_status = update_status(msg_status, res, 'Message')
         add.update(res)
         texts.append(add)
         
 
     #To do: This needs to be moved, but to where?
-    #msgObj.update_sent()
+    #
     #subObj.update_sent()
 
     sleep(30)
