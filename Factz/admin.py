@@ -30,6 +30,7 @@ class activeSubAdmin(admin.ModelAdmin):
 class messageAdmin(admin.ModelAdmin):    
     list_display = ['subscription', 'message', 'follow_up', 'last_sent', 'get_rating', 'active']
     list_filter = ['subscription', 'active', 'last_sent']
+    search_fields = ['message','follow_up']
     actions = [set_active, set_inactive]
     
 class numberAdmin(admin.ModelAdmin):
