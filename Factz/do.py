@@ -3,6 +3,7 @@ from Factz.models import Number, Variable, Message, Subscription
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.utils import timezone
 from datetime import datetime
 from random import random
 from time import sleep
@@ -180,9 +181,13 @@ def send_to_all(smObjs):
         #To do: deal with when message is null and we want to send a custom message instead.
         msgObj = smObj.message
         res = user.send_message(msgObj)
+        if res["Message"][0] == 0:
+            smObj.sent_time = timezone.now()
+            smObj.save()
         msg_status = update_status(msg_status, res, 'Message')
         add.update(res)
         texts.append(add)
+        
 
     #To do: This needs to be moved, but to where?
     #msgObj.update_sent()
