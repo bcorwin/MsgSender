@@ -4,28 +4,26 @@ from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message
 from django.utils import timezone
 from datetime import datetime
-from math import ceil
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
     val = models.CharField(max_length=128)
-    
+
     def __str__(self):
-        return self.name + "=" + self.val    
-    
+        return self.name + "=" + self.val
+
 class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
     next_send = models.DateTimeField(null=True, blank=True)
+
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    
-    #Revamp: add end_time and auto-caluclate send_delay
-    send_base = models.TimeField(default=datetime(1,1,1,16))
-    send_delay = models.PositiveIntegerField(default=465)
 
-    #Could we use a text field with validation instead?
+    send_start = models.TimeField(default=datetime(1,1,1,16))
+    send_end =  models.TimeField(default=datetime(1,1,1,23,45))
+
     send_monday = models.BooleanField(default=True)
     send_tuesday = models.BooleanField(default=True)
     send_wednesday = models.BooleanField(default=True)
@@ -33,22 +31,28 @@ class Subscription(models.Model):
     send_friday = models.BooleanField(default=True)
     send_saturday = models.BooleanField(default=True)
     send_sunday = models.BooleanField(default=True)
-    
+
     def get_last_message(self):
         out = dailySend.objects.all().filter(subscription=self).order_by("-next_send_date")
         out = out[0].message if out.exists() else None
         return(out)
-    
+
     def wait_seconds(self):
         val = self.send_delay*60
         return(val)
-    
+
     def start_time(self):
-        hours = self.send_base.hour
-        minutes = self.send_base.minute
+        hours = self.send_start.hour
+        minutes = self.send_start.minute
         val = (hours*60+minutes)*60
         return(val)
-    
+
+    def end_time(self):
+        hours = self.send_end.hour
+        minutes = self.send_end.minute
+        val = (hours*60+minutes)*60
+        return(val)
+
     def check_today(self):
         today = datetime.today().weekday()
         if today == 0:
@@ -70,7 +74,7 @@ class Subscription(models.Model):
     def update_sent(self):
         self.last_sent = timezone.now()
         self.save()
-        
+
     def __str__(self):
         return self.name
 
@@ -82,9 +86,10 @@ class Message(models.Model):
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(null=True, blank=True)
+
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    
+
     def get_rating(self):
         ratings = [r.rating for r in sentMessage.objects.filter(message=self).exclude(rating__isnull=True)]
         if len(ratings) > 0:
@@ -92,11 +97,11 @@ class Message(models.Model):
         else:
             return None
     get_rating.short_description = "Rating"
-    
+
     def update_sent(self):
         self.last_sent = timezone.now()
         self.save()
-    
+
     def __str__(self):
         if len(self.message) > 160:
             out = self.message[0:159]
@@ -104,22 +109,23 @@ class Message(models.Model):
         else:
             out = self.message
         return out
-        
+
     class Meta:
         unique_together = ('sheet_id', 'subscription')
-        
+
 class Number(models.Model):
     phone_number = models.CharField(max_length=15, unique=True)
     confirmation_code = models.CharField(max_length=6, default=rand_code)
     confirmed = models.BooleanField(default=False)
     last_sent = models.DateTimeField(null=True, blank=True)
+
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    
+
     #Optional information
     name = models.CharField(max_length=32, blank=True, null=True)
     email = models.CharField(max_length=32, blank=True, null=True)
-    
+
     def toggle_active(self, subObj, status=None):
         '''
         Either set the active status of a number/subscription pair to status
@@ -136,10 +142,10 @@ class Number(models.Model):
         asObj.active = status if status != None else not asObj.active
         asObj.save()
         return asObj
-    
+
     def get_active_subscription(self, subObj):
         return activeSubscription.objects.filter(number=self, subscription=subObj)
-    
+
     def get_last_message(self, subObj = None):
         '''
         Get the most recent message for a given subscription OR the most recent if subObj is None
@@ -148,15 +154,15 @@ class Number(models.Model):
             asObj = activeSubscription.objects.filter(number=self, subscription=subObj)
         else:
             asObj = activeSubscription.objects.filter(number=self).order_by('-last_sent')
-        
+
         if asObj.exists():
             asObj = asObj[0]
             out = asObj.message
         else:
             out = None
-            
+
         return out
-    
+
     def get_last_sm(self):
         out = None
         asObj = activeSubscription.objects.filter(number=self).exclude(last_sent__isnull=True).order_by('-last_sent')
@@ -166,39 +172,40 @@ class Number(models.Model):
             if smObj.exists():
                 out = smObj[0]
         return(out)
-        
-    
+
+
     def update_sent(self):
         self.last_sent = timezone.now()
         self.save()
-    
+
     def save(self, *args, **kwargs):
         self.phone_number = format_number(self.phone_number)
         if not self.pk:
             chk = send_test_message(self)
             if chk[0] != 0:
                 raise ValueError(chk[1])
-            
+
         super(Number, self).save(*args, **kwargs)
-        
+
     def __str__(self):
         return self.name if self.name != None else self.phone_number
-        
+
 class activeSubscription(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)
     subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, blank=True, null=True, default=None, on_delete=models.PROTECT)
     active = models.BooleanField(default=True)
     last_sent = models.DateTimeField(default = None, null=True, blank=True)
+
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    
+
     def update_sent(self, msgObj):
         self.message = msgObj
         self.last_sent = timezone.now()
         self.number.update_sent()
         self.save()
-    
+
     def send_message(self, msgObj):
         if self.active == True:
             res = send_message(msgObj, self)
@@ -207,7 +214,7 @@ class activeSubscription(models.Model):
         else:
             res = (-1, "Not active.")
         return {"Message":res}
-    
+
     def send_follow_up(self, msgObj):
         if self.active == True and msgObj.follow_up not in ('', None):
             res = send_message(msgObj, self, type="followup")
@@ -216,7 +223,7 @@ class activeSubscription(models.Model):
         else:
             res = (-2, "No follow up.")
         return {"Followup":res}
-    
+
     def save(self, *args, **kwargs):
         is_new = True if not self.pk else False
         super(activeSubscription, self).save(*args, **kwargs)
@@ -224,29 +231,38 @@ class activeSubscription(models.Model):
             msgObj = self.subscription.get_last_message()
             smObj = sentMessage(active_subscription=self, message=msgObj, next_send=timezone.now())
             smObj.save()
-        
+
     def __str__(self):
         return str(self.number) + " " + str(self.subscription) + " (" + str(self.active) + ")"
-        
+
     class Meta:
         unique_together = ('number', 'subscription')
 
 class dailySend(models.Model):
     subscription = models.ForeignKey(Subscription)
-    message = models.ForeignKey(Message)
+    message = models.ForeignKey(Message,null=True,blank=True)
+    next_send = models.DateTimeField(null=True,blank=True)
     next_send_date = models.DateField()
-    
+
+    def save(self, *args, **kwargs):
+        if self.next_send is not None:
+            self.next_send_date = self.next_send.date()
+        super(dailySend, self).save(*args, **kwargs)
+
 class sentMessage(models.Model):
     active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
-    next_send = models.DateTimeField()
+    daily_send = models.ForeignKey(dailySend, null=True, blank=True, default=None, on_delete=models.PROTECT)
+    next_send = models.DateTimeField(null=True,blank=True)
     next_send_date = models.DateField()
     sent_time = models.DateTimeField(default=None, null=True, blank=True)
     attempted = models.BooleanField(default=False)
     rating = models.IntegerField(default=None, null=True, blank=True, validators = [MinValueValidator(1), MaxValueValidator(5)])
+
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    
+
     def save(self, *args, **kwargs):
-        self.next_send_date = self.next_send.date()
+        if self.next_send is not None:
+            self.next_send_date = self.next_send.date()
         super(sentMessage, self).save(*args, **kwargs)
