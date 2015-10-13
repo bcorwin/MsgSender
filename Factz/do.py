@@ -115,7 +115,7 @@ def upload_file(f, sub, overwrite):
         follow_up = row[2]
         source = row[3]
 
-        msgObj =  Message.objects.filter(sheet_id=sheet_id)
+        msgObj =  Message.objects.filter(sheet_id=sheet_id, subscription=sub)
         if msgObj.exists():
             msgObj = msgObj.get()
             changes = {
