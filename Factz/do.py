@@ -172,46 +172,31 @@ def send_to_all(smObjs):
     if smObjs == [] or smObjs == None: return(None)
 
     texts = []
-    msg_status = {'succ':0,'fail':0,'na':0}
-    fu_status =  {'succ':0,'fail':0,'na':0}
 
     for smObj in smObjs:
         user = smObj.active_subscription
         add = {"Number":user}
         #To do: deal with when message is null and we want to send a custom message instead.
         msgObj = smObj.message
-        res = user.send_message(msgObj)
-        if res["Message"][0] == 0:
-            smObj.sent_time = timezone.now()
+        if smObj.attempted == 0:
+            res = user.send_message(msgObj)
+            if res["Message"][0] == 0:
+                smObj.attempted = 1 if msgObj.follow_up not in ('', None) else 2
+                smObj.save()
+                msgObj.update_sent()
+            else:
+                smObj.attempted = 2
+                smObj.save()
+            add.update(res)
+        elif smObj.attempted == 1:
+            f_res = user.send_follow_up(msgObj)
+            smObj.attempted = 2
             smObj.save()
-            msgObj.update_sent()
-        msg_status = update_status(msg_status, res, 'Message')
-        add.update(res)
+            add.update(f_res)
+        else: continue
         texts.append(add)
-        
 
-    #To do: This needs to be moved, but to where?
-    #
-    #subObj.update_sent()
-
-    sleep(30)
-
-    for text in texts:
-        errCode = text["Message"][0]
-        asObj = text["Number"]
-        if msgObj.follow_up in ('', None):
-            f_res = {"Followup":(-2, "No follow up.")}
-            text.update(f_res)
-        elif errCode == 0:
-            #Only send the follow up if the the message was successful
-            f_res = asObj.send_follow_up(msgObj)
-            text.update(f_res)
-        else:
-            f_res = {"Followup":(4, "Message failed, did not attempt.")}
-            text.update(f_res)
-        fu_status = update_status(fu_status, f_res, 'Followup')
-
-    out = {"texts":texts, "msgObj":msgObj, "msg_status":msg_status, "fu_status":fu_status}
+    out = {"texts":texts, "msgObj":msgObj}
     email_send_results(out)
 
     return out
