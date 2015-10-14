@@ -44,7 +44,6 @@ def dailysend():
         if sM.active_subscription.active == False: continue
         if sM.active_subscription.subscription.active == False: continue
         sentMessages.append(sM)
-        sM.save()
     if sentMessages != []: do.send_to_all(sentMessages)
 
     return(None)
