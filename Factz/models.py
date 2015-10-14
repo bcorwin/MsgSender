@@ -16,10 +16,10 @@ class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
     next_send = models.DateTimeField(null=True, blank=True)
-
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-
+    
     send_start = models.TimeField(default=datetime(1,1,1,16))
     send_end =  models.TimeField(default=datetime(1,1,1,23,45))
 
@@ -254,9 +254,13 @@ class sentMessage(models.Model):
     next_send = models.DateTimeField(null=True,blank=True)
     next_send_date = models.DateField()
     sent_time = models.DateTimeField(default=None, null=True, blank=True)
-    attempted = models.BooleanField(default=False)
+    attempted = models.IntegerField(default=0, choices=((0, "Not attempted"), (1, "Message attempted"), (2, "Completed")))
     rating = models.IntegerField(default=None, null=True, blank=True, validators = [MinValueValidator(1), MaxValueValidator(5)])
-
+    message_code = models.IntegerField(default=None, null=True, blank=True)
+    message_status = models.CharField(default=None, null=True, blank=True, max_length=64)
+    followup_code = models.IntegerField(default=None, null=True, blank=True)
+    followup_status = models.CharField(default=None, null=True, blank=True, max_length=64)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 

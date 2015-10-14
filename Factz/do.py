@@ -171,50 +171,28 @@ def send_to_all(smObjs):
     '''
     if smObjs == [] or smObjs == None: return(None)
 
-    texts = []
-    msg_status = {'succ':0,'fail':0,'na':0}
-    fu_status =  {'succ':0,'fail':0,'na':0}
-
     for smObj in smObjs:
         user = smObj.active_subscription
         add = {"Number":user}
         #To do: deal with when message is null and we want to send a custom message instead.
         msgObj = smObj.message
-        res = user.send_message(msgObj)
-        if res["Message"][0] == 0:
-            smObj.sent_time = timezone.now()
+        if smObj.attempted == 0:
+            res = user.send_message(msgObj)
+            if res["Message"][0] == 0:
+                msgObj.update_sent()
+                smObj.attempted = 1 if msgObj.follow_up not in ('', None) else 2
+            else:
+                smObj.attempted = 2
+            smObj.message_code, smObj.message_status = res["Message"]
             smObj.save()
-            msgObj.update_sent()
-        msg_status = update_status(msg_status, res, 'Message')
-        add.update(res)
-        texts.append(add)
-        
+        elif smObj.attempted == 1:
+            f_res = user.send_follow_up(msgObj)
+            smObj.attempted = 2
+            smObj.followup_code, smObj.followup_status = f_res["Followup"]
+            smObj.save()
+        else: continue
 
-    #To do: This needs to be moved, but to where?
-    #
-    #subObj.update_sent()
-
-    sleep(30)
-
-    for text in texts:
-        errCode = text["Message"][0]
-        asObj = text["Number"]
-        if msgObj.follow_up in ('', None):
-            f_res = {"Followup":(-2, "No follow up.")}
-            text.update(f_res)
-        elif errCode == 0:
-            #Only send the follow up if the the message was successful
-            f_res = asObj.send_follow_up(msgObj)
-            text.update(f_res)
-        else:
-            f_res = {"Followup":(4, "Message failed, did not attempt.")}
-            text.update(f_res)
-        fu_status = update_status(fu_status, f_res, 'Followup')
-
-    out = {"texts":texts, "msgObj":msgObj, "msg_status":msg_status, "fu_status":fu_status}
-    email_send_results(out)
-
-    return out
+    return None
 
 def update_status(counter, result, msg_type):
     if result[msg_type][0] == 0:
@@ -228,6 +206,7 @@ def update_status(counter, result, msg_type):
 def email_send_results(staOutput):
     '''
     Emails the output of send_to_all using the send_results.html template
+    This format: out = {"texts":texts, "msgObj":msgObj} texts = [{"Number": asObj, "Message": (errCode, errMsg) , "Followup": (errCode, errMsg)}, ..]
     '''
     msgObj = staOutput["msgObj"]
 
