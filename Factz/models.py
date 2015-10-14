@@ -256,7 +256,11 @@ class sentMessage(models.Model):
     sent_time = models.DateTimeField(default=None, null=True, blank=True)
     attempted = models.IntegerField(default=0, choices=((0, "Not attempted"), (1, "Message attempted"), (2, "Completed")))
     rating = models.IntegerField(default=None, null=True, blank=True, validators = [MinValueValidator(1), MaxValueValidator(5)])
-
+    message_code = models.IntegerField(default=None, null=True, blank=True)
+    message_status = models.CharField(default=None, null=True, blank=True, max_length=64)
+    followup_code = models.IntegerField(default=None, null=True, blank=True)
+    followup_status = models.CharField(default=None, null=True, blank=True, max_length=64)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 

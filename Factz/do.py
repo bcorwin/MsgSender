@@ -171,8 +171,6 @@ def send_to_all(smObjs):
     '''
     if smObjs == [] or smObjs == None: return(None)
 
-    texts = []
-
     for smObj in smObjs:
         user = smObj.active_subscription
         add = {"Number":user}
@@ -181,25 +179,20 @@ def send_to_all(smObjs):
         if smObj.attempted == 0:
             res = user.send_message(msgObj)
             if res["Message"][0] == 0:
-                smObj.attempted = 1 if msgObj.follow_up not in ('', None) else 2
-                smObj.save()
                 msgObj.update_sent()
+                smObj.attempted = 1 if msgObj.follow_up not in ('', None) else 2
             else:
                 smObj.attempted = 2
-                smObj.save()
-            add.update(res)
+            smObj.message_code, smObj.message_status = res["Message"]
+            smObj.save()
         elif smObj.attempted == 1:
             f_res = user.send_follow_up(msgObj)
             smObj.attempted = 2
+            smObj.followup_code, smObj.followup_status = f_res["Followup"]
             smObj.save()
-            add.update(f_res)
         else: continue
-        texts.append(add)
 
-    out = {"texts":texts, "msgObj":msgObj}
-    email_send_results(out)
-
-    return out
+    return None
 
 def update_status(counter, result, msg_type):
     if result[msg_type][0] == 0:
@@ -213,6 +206,7 @@ def update_status(counter, result, msg_type):
 def email_send_results(staOutput):
     '''
     Emails the output of send_to_all using the send_results.html template
+    This format: out = {"texts":texts, "msgObj":msgObj} texts = [{"Number": asObj, "Message": (errCode, errMsg) , "Followup": (errCode, errMsg)}, ..]
     '''
     msgObj = staOutput["msgObj"]
 
