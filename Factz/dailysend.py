@@ -33,7 +33,6 @@ def dailysend():
             for aS in activeSubs:
                 [sM,new] = sentMessage.objects.get_or_create(active_subscription=aS,message=msg,next_send_date=today,daily_send=dS)
                 if new:
-                    sM.attempted = 0
                     sM.next_send = get_send_time(dS,aS)
                     sM.save()
 
