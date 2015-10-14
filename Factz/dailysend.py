@@ -41,7 +41,6 @@ def dailysend():
     sentMessages = []
     toSend = sentMessage.objects.filter(next_send_date=today,next_send__lt=now,attempted__lt=2)
     for sM in toSend:
-        if sM.sent_time is not None: continue
         if sM.active_subscription.active == False: continue
         if sM.active_subscription.subscription.active == False: continue
         sentMessages.append(sM)
