@@ -1,5 +1,5 @@
 from django.contrib import admin
-from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage, dailySend
+from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage, dailySend, customMessage
 
 def set_active(modeladmin, request, queryset):
     queryset.update(active=True)
@@ -51,7 +51,7 @@ class dsAdmin(admin.ModelAdmin):
     ordering = ['-next_send_date']
     
 class smAdmin(admin.ModelAdmin):
-    list_display = ['active_subscription', 'next_send', 'sent_time', 'message', 'rating', 'attempted']
+    list_display = ['active_subscription', 'next_send', 'sent_time', 'print_msg', 'rating', 'attempted']
     list_filter = ['next_send_date', 'sent_time', 'rating', 'attempted']
     
 admin.site.register(Message, messageAdmin)
@@ -61,3 +61,4 @@ admin.site.register(Variable, varAdmin)
 admin.site.register(activeSubscription, activeSubAdmin)
 admin.site.register(sentMessage, smAdmin)
 admin.site.register(dailySend, dsAdmin)
+admin.site.register(customMessage)

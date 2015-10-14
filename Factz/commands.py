@@ -1,12 +1,20 @@
 from Factz.do import sub_exist, add_number, number_exist, add_rating
 import re
-
-commands = {
-            "subscribe":    ["subscribe *(.*)", "add *(.*)"],
-            "unsubscribe":  ["unsubscribe *(.*)", "leave *(.*)", "stop *(.*)"],
-            "source":       ["source()", "sauce()"],
-            "rate":         ["rate *(\d*)", "rating *(\d*)", "(\d+)"],
-            }
+           
+class textCommand:
+    def __init__(self, name, display_name, regex_list):
+        self.name = name
+        self.display_name = display_name
+        self.regex_list = regex_list
+    def __str__(self):
+        return self.display_name
+        
+commands = [
+            textCommand("subscribe",    "Subscribe PoopFactz",  ["subscribe *(.*)", "add *(.*)"]),
+            textCommand("unsubscribe",  "Unsubscribe PoopFactz",["unsubscribe *(.*)", "leave *(.*)", "stop *(.*)"]),
+            textCommand("source",       "Source",               ["source()", "sauce()"]),
+            textCommand("rate",         "Rate {1-5}",           ["rate *(\d*)", "rating *(\d*)", "(\d+)"]),
+        ]
 
 def extract_command(text, commands):
     '''
@@ -14,13 +22,13 @@ def extract_command(text, commands):
     "COMMAND [PARAMETERS]" and outputs the first match it finds
     '''
     out = [None, None]
-    for cname in commands:
-        reg_list = commands[cname]
-        for reg in reg_list:
+    for command in commands:
+        regex_list = command.regex_list
+        for reg in regex_list:
             pattern = re.compile(reg, re.IGNORECASE)
             if pattern.match(text):
                 parm = pattern.match(text).groups()[0]
-                out[0] = cname
+                out[0] = command.name
                 out[1] = parm if parm != '' else None
                 break
     return out
@@ -102,7 +110,7 @@ def update_user(message, numObj):
     else:
         out = "Unknown command. "
         out += "Try one of these: "
-        out += ", ".join(commands)
+        out += ", ".join([str(c) for c in commands])
     return out
     
 def gen_reply(from_number, message):
