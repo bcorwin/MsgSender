@@ -1,8 +1,9 @@
 #Use do to store functions that may depend on models
-from Factz.models import Number, Variable, Message, activeSubscription, Subscription
+from Factz.models import Number, Variable, Message, Subscription
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.utils import timezone
 from datetime import datetime
 from random import random
 from time import sleep
@@ -17,7 +18,7 @@ def get_value(varname):
     except:
         val = None
     return val
-    
+
 def weighted_choice(obj, weights):
     if len(obj) != len(weights):
         raise ValidationError
@@ -32,7 +33,7 @@ def weighted_choice(obj, weights):
     for i, total in enumerate(totals):
         if rnd < total:
             return obj[i]
-    
+
 def next_message(subObj):
     '''
     Randomly select the next message. Older messages have higher weight.
@@ -44,7 +45,7 @@ def next_message(subObj):
 
     min_date = [m.last_sent.date() for m in msg_set if m.last_sent != None]
     min_date = min(min_date) if len(min_date) >0 else today
-    
+
     ages = [m.last_sent.date() if m.last_sent != None else min_date for m in msg_set]
     ages = [int(1.25**((today - ls).days + 1)) for ls in ages]
 
@@ -84,7 +85,7 @@ def add_number(num):
         num = Number(phone_number=num)
         num.save()
     return num
-    
+
 def add_rating(numObj, rating):
     '''
     Adds a rating (and validates it)
@@ -117,7 +118,7 @@ def upload_file(f, sub, overwrite):
         follow_up = row[2]
         source = row[3]
 
-        msgObj =  Message.objects.filter(sheet_id=sheet_id)
+        msgObj =  Message.objects.filter(sheet_id=sheet_id, subscription=sub)
         if msgObj.exists():
             msgObj = msgObj.get()
             changes = {
@@ -168,26 +169,33 @@ def send_to_all(smObjs):
     '''
     smObjs should be a list of sentMessage objects
     '''
+    if smObjs == [] or smObjs == None: return(None)
+
     texts = []
     msg_status = {'succ':0,'fail':0,'na':0}
     fu_status =  {'succ':0,'fail':0,'na':0}
-    
+
     for smObj in smObjs:
         user = smObj.active_subscription
         add = {"Number":user}
         #To do: deal with when message is null and we want to send a custom message instead.
         msgObj = smObj.message
         res = user.send_message(msgObj)
+        if res["Message"][0] == 0:
+            smObj.sent_time = timezone.now()
+            smObj.save()
+            msgObj.update_sent()
         msg_status = update_status(msg_status, res, 'Message')
         add.update(res)
         texts.append(add)
         
+
     #To do: This needs to be moved, but to where?
-    #msgObj.update_sent()
+    #
     #subObj.update_sent()
-        
+
     sleep(30)
-    
+
     for text in texts:
         errCode = text["Message"][0]
         asObj = text["Number"]

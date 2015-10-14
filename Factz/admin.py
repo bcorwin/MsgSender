@@ -30,6 +30,7 @@ class activeSubAdmin(admin.ModelAdmin):
 class messageAdmin(admin.ModelAdmin):    
     list_display = ['subscription', 'message', 'follow_up', 'last_sent', 'get_rating', 'active']
     list_filter = ['subscription', 'active', 'last_sent']
+    search_fields = ['message','follow_up']
     actions = [set_active, set_inactive]
     
 class numberAdmin(admin.ModelAdmin):
@@ -37,8 +38,8 @@ class numberAdmin(admin.ModelAdmin):
     inlines = [activeSubInline]
 
 class subAdmin(admin.ModelAdmin):
-    list_display = ['name', 'last_sent', 'next_send', 'active']
-    list_filter = ['active', 'last_sent', 'next_send']
+    list_display = ['name', 'next_send', 'active']
+    list_filter = ['active', 'next_send']
     
 class varAdmin(admin.ModelAdmin):
     list_display = ['name', 'val']
@@ -46,6 +47,7 @@ class varAdmin(admin.ModelAdmin):
 class dsAdmin(admin.ModelAdmin):
     list_display = ['subscription', 'next_send_date', 'message']
     list_filter = ['subscription', 'next_send_date']
+    inlines = [sentMsgInline]
     ordering = ['-next_send_date']
     
 class smAdmin(admin.ModelAdmin):
