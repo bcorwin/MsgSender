@@ -16,10 +16,8 @@ class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
     next_send = models.DateTimeField(null=True, blank=True)
-    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    
     send_start = models.TimeField(default=datetime(1,1,1,16))
     send_end =  models.TimeField(default=datetime(1,1,1,23,45))
 
@@ -43,13 +41,6 @@ class Subscription(models.Model):
     def start_time(self):
         hours = self.send_start.hour
         minutes = self.send_start.minute
-        val = (hours*60+minutes)*60
-        return(val)
-        
-    def end_time(self):
-        hours = self.send_end.hour
-        minutes = self.send_end.minute
-
         val = (hours*60+minutes)*60
         return(val)
 

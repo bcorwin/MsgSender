@@ -12,7 +12,6 @@ def dailysend():
 
     #Fetch active subscriptions and loop
     subs = Subscription.objects.filter(active=True)
-
     for S in subs:
 
         #First, quit if today is invalid for the subscription
@@ -81,4 +80,3 @@ def get_send_time(dailySend, activeSubscription):
     send_time = dailySend.next_send
 
     return(send_time)
->>>>>>> refs/remotes/bcorwin/master
