@@ -16,8 +16,10 @@ class Subscription(models.Model):
     name = models.CharField(max_length=16, unique=True)
     active = models.BooleanField(default=True)
     next_send = models.DateTimeField(null=True, blank=True)
+    
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    
     send_start = models.TimeField(default=datetime(1,1,1,16))
     send_end =  models.TimeField(default=datetime(1,1,1,23,45))
 
