@@ -7,11 +7,11 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Factz', '0041_remove_subscription_last_sent'),
+        ('Factz', '0042_auto_20151013_2239'),
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.AddField(
             model_name='sentmessage',
             name='attempted',
             field=models.IntegerField(choices=[(0, 'Not attempted'), (1, 'Message attempted'), (2, 'Completed')], default=0),
