@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 
 ALTER_SQL = '''
-    ALTER TABLE Factz_sentMessage ALTER COLUMN attempted TYPE integer USING (
+    ALTER TABLE Factz.sentMessage ALTER COLUMN attempted TYPE integer USING (
         CASE attempted
             when TRUE then 1
             when FALSE then 0
