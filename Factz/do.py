@@ -176,14 +176,21 @@ def send_to_all(smObjs):
         add = {"Number":user}
         #To do: deal with when message is null and we want to send a custom message instead.
         msgObj = smObj.message
+        customMsg = smObj.custom_message
         if smObj.attempted == 0:
-            res = user.send_message(msgObj)
-            if res["Message"][0] == 0:
-                msgObj.update_sent()
-                smObj.attempted = 1 if msgObj.follow_up not in ('', None) else 2
-            else:
+            if msgObj != None:
+                res = user.send_message(msgObj)
+                if res["Message"][0] == 0:
+                    msgObj.update_sent()
+                    smObj.attempted = 1 if msgObj.follow_up not in ('', None) else 2
+                else:
+                    smObj.attempted = 2
+                smObj.message_code, smObj.message_status = res["Message"]
+            elif customMsg != None:
+                c_res = customMsg.send(user)
                 smObj.attempted = 2
-            smObj.message_code, smObj.message_status = res["Message"]
+                smObj.message_code, smObj.message_status = c_res
+            else: continue
             smObj.save()
         elif smObj.attempted == 1:
             f_res = user.send_follow_up(msgObj)

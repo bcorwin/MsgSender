@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from Factz.utils import rand_code, format_number
-from Factz.messaging import send_test_message, send_message
+from Factz.messaging import send_test_message, send_message, send_text
 from django.utils import timezone
 from datetime import datetime
 
@@ -86,7 +86,7 @@ class Message(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
 
     def get_rating(self):
-        ratings = [r.rating for r in sentMessage.objects.filter(message=self).exclude(rating__isnull=True)]
+        ratings = [r.rating for r in sentMessage.objects.filter(message=self).exclude(rating__isnull=True, message__isnull=True)]
         if len(ratings) > 0:
             return round(sum(ratings)/len(ratings), 1)
         else:
@@ -108,6 +108,22 @@ class Message(models.Model):
     class Meta:
         unique_together = ('sheet_id', 'subscription')
 
+class customMessage(models.Model):
+    message = models.CharField(max_length=160)
+    last_sent = models.DateTimeField(null=True, blank=True)
+    
+    inserted_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    
+    def send(self, asObj):
+        out = send_text(message=self.message, to_number=asObj.number.phone_number)
+        self.last_sent = timezone.now()
+        self.save()
+        return out       
+       
+    def __str__(self):
+        return self.message
+    
 class Number(models.Model):
     phone_number = models.CharField(max_length=15, unique=True)
     confirmation_code = models.CharField(max_length=6, default=rand_code)
@@ -163,7 +179,7 @@ class Number(models.Model):
         asObj = activeSubscription.objects.filter(number=self).exclude(last_sent__isnull=True).order_by('-last_sent')
         if asObj.exists():
             asObj = asObj[0]
-            smObj = sentMessage.objects.all().filter(active_subscription=asObj).exclude(sent_time__isnull=True).order_by('sent_time')
+            smObj = sentMessage.objects.all().filter(active_subscription=asObj).exclude(sent_time__isnull=True, message__isnull=True).order_by('sent_time')
             if smObj.exists():
                 out = smObj[0]
         return(out)
@@ -250,6 +266,7 @@ class dailySend(models.Model):
 class sentMessage(models.Model):
     active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
+    custom_message = models.ForeignKey(customMessage, null=True, blank=True, default=None, on_delete=models.PROTECT)
     daily_send = models.ForeignKey(dailySend, null=True, blank=True, default=None, on_delete=models.PROTECT)
     next_send = models.DateTimeField(null=True,blank=True)
     next_send_date = models.DateField()
@@ -268,6 +285,13 @@ class sentMessage(models.Model):
         if self.next_send is not None:
             self.next_send_date = self.next_send.date()
         super(sentMessage, self).save(*args, **kwargs)
+        
+    def print_msg(self):
+        if self.message not in ('', None): return self.message
+        elif self.custom_message not in ('', None): return self.custom_message
+        else: return None
+    print_msg.short_description = "Text body"
     
     def __str__(self):
         return self.active_subscription.subscription.name + " (" + str(self.next_send_date) + ")"
+        
