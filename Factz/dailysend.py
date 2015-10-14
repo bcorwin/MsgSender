@@ -33,7 +33,7 @@ def dailysend():
             for aS in activeSubs:
                 [sM,new] = sentMessage.objects.get_or_create(active_subscription=aS,message=msg,next_send_date=today,daily_send=dS)
                 if new:
-                    sM.attempted = False
+                    sM.attempted = 0
                     sM.next_send = get_send_time(dS,aS)
                     sM.save()
 
@@ -45,8 +45,6 @@ def dailysend():
         if sM.active_subscription.active == False: continue
         if sM.active_subscription.subscription.active == False: continue
         sentMessages.append(sM)
-        sM.attempted = True
-        sM.save()
     if sentMessages != []: do.send_to_all(sentMessages)
 
     return(None)
