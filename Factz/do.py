@@ -184,6 +184,7 @@ def send_to_all(smObjs):
             else:
                 smObj.attempted = 2
             smObj.message_code, smObj.message_status = res["Message"]
+            smObj.sent_time = timezone.now()
             smObj.save()
         elif smObj.attempted == 1:
             f_res = user.send_follow_up(msgObj)
