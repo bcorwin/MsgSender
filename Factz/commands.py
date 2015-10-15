@@ -13,7 +13,7 @@ commands = [
             textCommand("subscribe",    "Subscribe PoopFactz",  ["subscribe *(.*)", "add *(.*)"]),
             textCommand("unsubscribe",  "Unsubscribe PoopFactz",["unsubscribe *(.*)", "leave *(.*)", "stop *(.*)"]),
             textCommand("source",       "Source",               ["source()", "sauce()"]),
-            textCommand("rate",         "Rate {1-5}",           ["rate *(\d*)", "rating *(\d*)", "(\d+)"]),
+            textCommand("rate",         "Rate #",               ["rate *(\d*)", "rating *(\d*)", "(\d+)"]),
         ]
 
 def extract_command(text, commands):
