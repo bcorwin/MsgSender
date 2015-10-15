@@ -179,7 +179,7 @@ class Number(models.Model):
         asObj = activeSubscription.objects.filter(number=self).exclude(last_sent__isnull=True).order_by('-last_sent')
         if asObj.exists():
             asObj = asObj[0]
-            smObj = sentMessage.objects.all().filter(active_subscription=asObj).exclude(sent_time__isnull=True, message__isnull=True).order_by('-sent_time')
+            smObj = sentMessage.objects.all().filter(active_subscription=asObj).exclude(sent_time__isnull=True).exclude(message__isnull=True).order_by('-sent_time')
             if smObj.exists():
                 out = smObj[0]
         return(out)
