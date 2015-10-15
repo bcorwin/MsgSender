@@ -9,8 +9,8 @@ def set_inactive(modeladmin, request, queryset):
 
 class sentMsgInline(admin.TabularInline):
     model = sentMessage
-    fields = ['next_send', 'sent_time', 'message', 'rating', 'attempted']
-    readonly_fields = ['next_send', 'sent_time', 'message', 'rating', 'attempted']
+    fields = ['next_send', 'sent_time', 'print_msg', 'rating', 'attempted']
+    readonly_fields = ['next_send', 'sent_time', 'print_msg', 'rating', 'attempted']
     show_change_link = True
     extra = 0
     
