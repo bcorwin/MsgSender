@@ -264,11 +264,11 @@ class dailySend(models.Model):
         return  self.subscription.name + " (" + str(self.next_send_date) + ")"
 
 class sentMessage(models.Model):
-    active_subscription = models.ForeignKey(activeSubscription, null=True, blank=True, default=None, on_delete=models.PROTECT)
+    active_subscription = models.ForeignKey(activeSubscription, on_delete=models.PROTECT)
     message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
     custom_message = models.ForeignKey(customMessage, null=True, blank=True, default=None, on_delete=models.PROTECT)
     daily_send = models.ForeignKey(dailySend, null=True, blank=True, default=None, on_delete=models.PROTECT)
-    next_send = models.DateTimeField(null=True,blank=True)
+    next_send = models.DateTimeField()
     next_send_date = models.DateField()
     sent_time = models.DateTimeField(default=None, null=True, blank=True)
     attempted = models.IntegerField(default=0, choices=((0, "Not attempted"), (1, "Message attempted"), (2, "Completed")))
@@ -277,6 +277,7 @@ class sentMessage(models.Model):
     message_status = models.CharField(default=None, null=True, blank=True, max_length=64)
     followup_code = models.IntegerField(default=None, null=True, blank=True)
     followup_status = models.CharField(default=None, null=True, blank=True, max_length=64)
+    is_custom = models.BooleanField()
     
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -284,12 +285,14 @@ class sentMessage(models.Model):
     def save(self, *args, **kwargs):
         if self.next_send is not None:
             self.next_send_date = self.next_send.date()
+            
+        if bool(self.message) != bool(self.custom_message): self.is_custom = bool(self.custom_message)
+        else: raise ValueError("Need a message xor custom_message.")
+            
         super(sentMessage, self).save(*args, **kwargs)
-        
+    
     def print_msg(self):
-        if self.message not in ('', None): return self.message
-        elif self.custom_message not in ('', None): return self.custom_message
-        else: return None
+        return self.custom_message if self.is_custom else self.message 
     print_msg.short_description = "Text body"
     
     def __str__(self):

@@ -52,7 +52,8 @@ class dsAdmin(admin.ModelAdmin):
     
 class smAdmin(admin.ModelAdmin):
     list_display = ['active_subscription', 'next_send', 'sent_time', 'print_msg', 'rating', 'attempted']
-    list_filter = ['next_send_date', 'sent_time', 'rating', 'attempted']
+    list_filter = ['next_send_date', 'sent_time', 'rating', 'attempted', 'is_custom']
+    readonly_fields = ['next_send_date', 'is_custom']
     
 admin.site.register(Message, messageAdmin)
 admin.site.register(Number, numberAdmin)
