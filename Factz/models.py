@@ -111,6 +111,7 @@ class Message(models.Model):
 class customMessage(models.Model):
     message = models.CharField(max_length=160)
     last_sent = models.DateTimeField(null=True, blank=True)
+    selected = models.BooleanField(default=False)
     
     inserted_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
@@ -120,6 +121,17 @@ class customMessage(models.Model):
         self.last_sent = timezone.now()
         self.save()
         return out       
+    
+    def save(self, *args, **kwargs):
+        #Only allow 1 custom message to be selected to send.
+        if self.selected:
+            try:
+                temp = customMessage.objects.get(selected=True)
+                if self != temp:
+                    temp.selected = False
+                    temp.save()
+            except customMessage.DoesNotExist: pass
+        super(customMessage, self).save(*args, **kwargs)
        
     def __str__(self):
         return self.message
@@ -240,8 +252,9 @@ class activeSubscription(models.Model):
         super(activeSubscription, self).save(*args, **kwargs)
         if is_new:
             msgObj = self.subscription.get_last_message()
-            smObj = sentMessage(active_subscription=self, message=msgObj, next_send=timezone.now())
-            smObj.save()
+            if msgObj is not None:
+                smObj = sentMessage(active_subscription=self, message=msgObj, next_send=timezone.now())
+                smObj.save()
 
     def __str__(self):
         return str(self.number) + " (" + str(self.subscription.name) + ")"

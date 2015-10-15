@@ -1,6 +1,10 @@
 from django.contrib import admin
 from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage, dailySend, customMessage
+from Factz.do import add_custom_messages
 
+def send_custom_message(modeladmin, request, queryset):
+    add_custom_messages(queryset)
+    
 def set_active(modeladmin, request, queryset):
     queryset.update(active=True)
 
@@ -25,7 +29,7 @@ class activeSubAdmin(admin.ModelAdmin):
     list_display = ['number', 'subscription', 'last_sent', 'active']
     list_filter = ['subscription', 'active', 'last_sent']
     inlines = [sentMsgInline]
-    actions = [set_active, set_inactive]
+    actions = [set_active, set_inactive, send_custom_message]
     
 class messageAdmin(admin.ModelAdmin):    
     list_display = ['subscription', 'message', 'follow_up', 'last_sent', 'get_rating', 'active']
@@ -35,11 +39,13 @@ class messageAdmin(admin.ModelAdmin):
     
 class numberAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'phone_number', 'last_sent']
+    actions = [send_custom_message]
     inlines = [activeSubInline]
 
 class subAdmin(admin.ModelAdmin):
     list_display = ['name', 'next_send', 'active']
     list_filter = ['active', 'next_send']
+    actions = [send_custom_message]
     
 class varAdmin(admin.ModelAdmin):
     list_display = ['name', 'val']
@@ -55,6 +61,12 @@ class smAdmin(admin.ModelAdmin):
     list_filter = ['next_send_date', 'sent_time', 'rating', 'attempted', 'is_custom']
     readonly_fields = ['next_send_date', 'is_custom']
     
+class cmAdmin(admin.ModelAdmin):
+    list_display = ['message', 'last_sent', 'selected']
+    list_filter = ['last_sent', 'selected']
+    search_fields = ['message']
+    readonly_fields = ['last_sent']
+    
 admin.site.register(Message, messageAdmin)
 admin.site.register(Number, numberAdmin)
 admin.site.register(Subscription, subAdmin)
@@ -62,4 +74,4 @@ admin.site.register(Variable, varAdmin)
 admin.site.register(activeSubscription, activeSubAdmin)
 admin.site.register(sentMessage, smAdmin)
 admin.site.register(dailySend, dsAdmin)
-admin.site.register(customMessage)
+admin.site.register(customMessage, cmAdmin)

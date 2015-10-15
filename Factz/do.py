@@ -1,5 +1,5 @@
 #Use do to store functions that may depend on models
-from Factz.models import Number, Variable, Message, Subscription
+from Factz.models import Number, Variable, Message, Subscription, customMessage, activeSubscription, sentMessage
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -230,3 +230,33 @@ def email_send_results(staOutput):
     msg.attach_alternative(html_content, "text/html")
     msg.send()
     return None
+    
+def add_cm(num_list, asObj, cMobj):
+    if asObj.active == False or asObj.subscription.active == False: pass
+    elif asObj.number not in num_list:
+        #Check to see if that number and custom message is already queued
+        chkSet = sentMessage.objects.all().filter(custom_message=cMobj, attempted=0)
+        chk = sum([c.active_subscription.number == asObj.number for c in chkSet])
+        if chk == 0:
+            sM = sentMessage(active_subscription=asObj, custom_message=cMobj, next_send=timezone.now())
+            sM.save()
+            num_list.append(asObj.number)
+    return num_list
+
+def add_custom_messages(obj_list):
+    cMobj = customMessage.objects.filter(selected=True)
+    if cMobj.exists(): cMobj = cMobj.get()
+    else: return None
+    
+    num_list = []
+    for obj in obj_list:
+        obj_type = type(obj).__name__
+        if obj_type == "activeSubscription":
+            num_list = add_cm(num_list, obj, cMobj)
+        elif obj_type == "Number":
+            asObjs = activeSubscription.objects.filter(number=obj, active=True)
+            if asObjs.exists(): num_list = add_cm(num_list, asObjs[0], cMobj)
+        elif obj_type == "Subscription":
+            asObjs = activeSubscription.objects.filter(subscription=obj, active=True)
+            if asObjs.exists(): num_list = add_cm(num_list, asObjs[0], cMobj)
+            
