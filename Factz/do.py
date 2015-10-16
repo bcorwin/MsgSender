@@ -219,7 +219,7 @@ def email_send_results(staOutput):
         subject = msgObj.subscription.name + " sent!"
     else:
         cMsg = msgObj.message
-        subject = cMsg[:15]+"..." if len(cMsg) >= 18 else cMsg
+        subject = cMsg[:64]+"..." if len(cMsg) >= 67 else cMsg
         subject = subject + " sent!"
     from_email = get_value("from_email")
     to = get_value("to_emails")
