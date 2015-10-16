@@ -6,7 +6,6 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from datetime import datetime
 from random import random
-from time import sleep
 import csv
 
 def get_value(varname):
@@ -173,8 +172,6 @@ def send_to_all(smObjs):
 
     for smObj in smObjs:
         user = smObj.active_subscription
-        add = {"Number":user}
-        #To do: deal with when message is null and we want to send a custom message instead.
         msgObj = smObj.message
         customMsg = smObj.custom_message
         if smObj.attempted == 0:
@@ -218,7 +215,12 @@ def email_send_results(staOutput):
     '''
     msgObj = staOutput["msgObj"]
 
-    subject = msgObj.subscription.name + " sent!"
+    if staOutput["custom"] != True:
+        subject = msgObj.subscription.name + " sent!"
+    else:
+        cMsg = msgObj.message
+        subject = cMsg[:15]+"..." if len(cMsg) >= 18 else cMsg
+        subject = subject + " sent!"
     from_email = get_value("from_email")
     to = get_value("to_emails")
     if to == None:

@@ -211,7 +211,7 @@ class Number(models.Model):
         super(Number, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.name if self.name != None else self.phone_number
+        return self.name if self.name not in  ('', None) else self.phone_number
 
 class activeSubscription(models.Model):
     number = models.ForeignKey(Number, on_delete=models.PROTECT)

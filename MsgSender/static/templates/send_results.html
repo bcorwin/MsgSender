@@ -4,6 +4,7 @@
     table, th, td {border: 1px solid black;}
  </style></head>
  <body>
+{% if custom != True %}
     <h3>Subscription:</h3> {{ msgObj.subscription }}<br>
     <h3>Message:</h3> {{ msgObj.message }} <a href="{{ msgObj.source }}">Source</a><br>
     <h3>Follow up:</h3> {{ msgObj.follow_up }}<br><br>
@@ -21,5 +22,21 @@
         </tr>
         {% endfor %}
     </table>
+{% else %}
+    <h3>Message:</h3> {{ msgObj.message }}<br><br>
+    <table>
+        <tr>
+            <th>Name</th><th>Phone number</th><th>Message</th>
+        </tr>
+    
+        {% for num in texts%}
+        <tr>
+            <td>{{ num.Number.number }}</td>
+            <td>{{ num.Number.number.phone_number }}</td>
+            <td {% if num.Message.0 > 0 %} style="color:red" {% endif %}>{{ num.Message.1 }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endif %}
  </body>
  </html>
