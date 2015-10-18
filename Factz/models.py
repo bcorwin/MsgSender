@@ -282,7 +282,7 @@ class sentMessage(models.Model):
     message = models.ForeignKey(Message, null=True, blank=True, default=None, on_delete=models.PROTECT)
     custom_message = models.ForeignKey(customMessage, null=True, blank=True, default=None, on_delete=models.PROTECT)
     daily_send = models.ForeignKey(dailySend, null=True, blank=True, default=None, on_delete=models.PROTECT)
-    next_send = models.DateTimeField()
+    next_send = models.DateTimeField(null=True,blank=True)
     next_send_date = models.DateField()
     sent_time = models.DateTimeField(default=None, null=True, blank=True)
     attempted = models.IntegerField(default=0, choices=((0, "Not attempted"), (1, "Message attempted"), (2, "Completed")))
