@@ -86,7 +86,7 @@ class Message(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
 
     def get_rating(self):
-        ratings = [r.rating for r in sentMessage.objects.filter(message=self).exclude(rating__isnull=True, message__isnull=True)]
+        ratings = [r.rating for r in sentMessage.objects.filter(message=self).exclude(rating__isnull=True)]
         if len(ratings) > 0:
             return round(sum(ratings)/len(ratings), 1)
         else:
@@ -188,12 +188,13 @@ class Number(models.Model):
 
     def get_last_sm(self):
         out = None
-        asObj = activeSubscription.objects.filter(number=self).exclude(last_sent__isnull=True).order_by('-last_sent')
-        if asObj.exists():
-            asObj = asObj[0]
-            smObj = sentMessage.objects.all().filter(active_subscription=asObj).exclude(sent_time__isnull=True).exclude(message__isnull=True).order_by('-sent_time')
+        asObjs = activeSubscription.objects.filter(number=self).exclude(last_sent__isnull=True).order_by('-last_sent')
+        print(asObjs)
+        for asObj in asObjs:
+            smObj = sentMessage.objects.all().filter(active_subscription=asObj, is_custom=False).exclude(sent_time__isnull=True).order_by('-sent_time')
             if smObj.exists():
                 out = smObj[0]
+                break
         return(out)
 
 
