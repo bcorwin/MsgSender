@@ -72,7 +72,7 @@ def add_user(from_number, message):
     subObj = extract_subscription(parm)
     #In future, check that that command == "subscribe"
     numObj.toggle_active(subObj, status=True)
-    out = "Welcome to " + subObj.name + "! Your first message is on its way."
+    out = "Welcome to " + subObj.name + "! Your first message is on its way. To unsubscribe send 'Unsubscribe PoopFactz'. Also, try replying with 'source' or a rating 1 to 5."
     # To do: send last message that was sent for newly subscribed sub?
     return out
 
