@@ -62,9 +62,6 @@
 <datatype>bit</datatype>
 <default>True</default>
 </row>
-<row name="last_sent" null="1" autoincrement="0">
-<datatype>DATETIME</datatype>
-</row>
 <row name="next_send" null="1" autoincrement="0">
 <datatype>DATETIME</datatype>
 </row>
@@ -74,13 +71,13 @@
 <row name="updated_date" null="0" autoincrement="0">
 <datatype>DATETIME</datatype>
 </row>
-<row name="send_base" null="0" autoincrement="0">
+<row name="send_start" null="0" autoincrement="0">
 <datatype>TIME</datatype>
 <default>datetime(1,1,1,16)</default>
 </row>
-<row name="send_delay" null="0" autoincrement="0">
-<datatype>INTEGER</datatype>
-<default>465</default>
+<row name="send_end" null="0" autoincrement="0">
+<datatype>TIME</datatype>
+<default>datetime(1,1,1,23,45)</default>
 </row>
 <row name="send_monday" null="0" autoincrement="0">
 <datatype>bit</datatype>
@@ -149,7 +146,30 @@
 <key type="PRIMARY" name="">
 <part>id</part>
 </key></table>
-<table x="31" y="31" name="Number">
+<table x="31" y="31" name="customMessage">
+<row name="id" null="1" autoincrement="1">
+<datatype>INTEGER</datatype>
+<default>NULL</default></row>
+<row name="message" null="0" autoincrement="0">
+<datatype>CHAR</datatype>
+</row>
+<row name="last_sent" null="1" autoincrement="0">
+<datatype>DATETIME</datatype>
+</row>
+<row name="selected" null="0" autoincrement="0">
+<datatype>bit</datatype>
+<default>False</default>
+</row>
+<row name="inserted_date" null="0" autoincrement="0">
+<datatype>DATETIME</datatype>
+</row>
+<row name="updated_date" null="0" autoincrement="0">
+<datatype>DATETIME</datatype>
+</row>
+<key type="PRIMARY" name="">
+<part>id</part>
+</key></table>
+<table x="41" y="41" name="Number">
 <row name="id" null="1" autoincrement="1">
 <datatype>INTEGER</datatype>
 <default>NULL</default></row>
@@ -182,7 +202,7 @@
 <key type="PRIMARY" name="">
 <part>id</part>
 </key></table>
-<table x="41" y="41" name="activeSubscription">
+<table x="51" y="51" name="activeSubscription">
 <row name="id" null="1" autoincrement="1">
 <datatype>INTEGER</datatype>
 <default>NULL</default></row>
@@ -216,7 +236,7 @@
 <key type="PRIMARY" name="">
 <part>id</part>
 </key></table>
-<table x="51" y="51" name="dailySend">
+<table x="61" y="61" name="dailySend">
 <row name="id" null="1" autoincrement="1">
 <datatype>INTEGER</datatype>
 <default>NULL</default></row>
@@ -224,9 +244,12 @@
 <datatype>INTEGER</datatype>
 <relation table="Subscription" row="id" />
 </row>
-<row name="message" null="0" autoincrement="0">
+<row name="message" null="1" autoincrement="0">
 <datatype>INTEGER</datatype>
 <relation table="Message" row="id" />
+</row>
+<row name="next_send" null="1" autoincrement="0">
+<datatype>DATETIME</datatype>
 </row>
 <row name="next_send_date" null="0" autoincrement="0">
 <datatype>DATE</datatype>
@@ -234,21 +257,30 @@
 <key type="PRIMARY" name="">
 <part>id</part>
 </key></table>
-<table x="61" y="61" name="sentMessage">
+<table x="71" y="71" name="sentMessage">
 <row name="id" null="1" autoincrement="1">
 <datatype>INTEGER</datatype>
 <default>NULL</default></row>
-<row name="active_subscription" null="1" autoincrement="0">
+<row name="active_subscription" null="0" autoincrement="0">
 <datatype>INTEGER</datatype>
 <relation table="activeSubscription" row="id" />
-<default>None</default>
 </row>
 <row name="message" null="1" autoincrement="0">
 <datatype>INTEGER</datatype>
 <relation table="Message" row="id" />
 <default>None</default>
 </row>
-<row name="next_send" null="0" autoincrement="0">
+<row name="custom_message" null="1" autoincrement="0">
+<datatype>INTEGER</datatype>
+<relation table="customMessage" row="id" />
+<default>None</default>
+</row>
+<row name="daily_send" null="1" autoincrement="0">
+<datatype>INTEGER</datatype>
+<relation table="dailySend" row="id" />
+<default>None</default>
+</row>
+<row name="next_send" null="1" autoincrement="0">
 <datatype>DATETIME</datatype>
 </row>
 <row name="next_send_date" null="0" autoincrement="0">
@@ -259,12 +291,31 @@
 <default>None</default>
 </row>
 <row name="attempted" null="0" autoincrement="0">
-<datatype>bit</datatype>
-<default>False</default>
+<datatype>INTEGER</datatype>
+<default>0</default>
 </row>
 <row name="rating" null="1" autoincrement="0">
 <datatype>INTEGER</datatype>
 <default>None</default>
+</row>
+<row name="message_code" null="1" autoincrement="0">
+<datatype>INTEGER</datatype>
+<default>None</default>
+</row>
+<row name="message_status" null="1" autoincrement="0">
+<datatype>CHAR</datatype>
+<default>None</default>
+</row>
+<row name="followup_code" null="1" autoincrement="0">
+<datatype>INTEGER</datatype>
+<default>None</default>
+</row>
+<row name="followup_status" null="1" autoincrement="0">
+<datatype>CHAR</datatype>
+<default>None</default>
+</row>
+<row name="is_custom" null="0" autoincrement="0">
+<datatype>bit</datatype>
 </row>
 <row name="inserted_date" null="0" autoincrement="0">
 <datatype>DATETIME</datatype>

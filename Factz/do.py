@@ -223,11 +223,23 @@ def email_send_results(staOutput):
         subject = subject + " sent!"
     from_email = get_value("from_email")
     to = get_value("to_emails")
-    if to == None:
-        return None
+    if to == None: return None
 
     text_content = 'Send to all results:'
     html_content = render_to_string('send_results.html', staOutput)
+    msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+    return None
+    
+def email_new_users(new_users):
+    subject = str(len(new_users)) + " new user(s)!"
+    from_email = get_value("from_email")
+    to = get_value("to_emails")
+    if to == None: return None
+    
+    text_content = 'New users:'
+    html_content = render_to_string('new_users.html', {"Numbers":new_users})
     msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
     msg.attach_alternative(html_content, "text/html")
     msg.send()

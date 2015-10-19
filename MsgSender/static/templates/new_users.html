@@ -1,0 +1,19 @@
+ <html>
+ <head><style>
+    h3,h4 {display: inline;}
+    table, th, td {border: 1px solid black;}
+ </style></head>
+ <body>
+    <table>
+        <tr>
+            <th>Name</th><th>Phone number</th>
+        </tr>
+        {% for num in Numbers%}
+        <tr>
+            <td>{{ num }}</td>
+            <td>{{ num.phone_number }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+ </body>
+ </html>

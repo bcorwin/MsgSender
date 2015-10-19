@@ -1,5 +1,5 @@
-from Factz.models import sentMessage
-from Factz.do import email_send_results
+from Factz.models import sentMessage, Number
+from Factz.do import email_send_results, email_new_users
 from django.utils import timezone
 from datetime import timedelta
 
@@ -30,3 +30,7 @@ def dailyemail():
                       for sM in sMobjs_subset]
         output = {"texts":texts, "msgObj":cmsgObj, "custom": True}
         email_send_results(output)
+        
+    #New users
+    new_users = Number.objects.filter(inserted_date__gte=prev_day)
+    if len(new_users) > 0: email_new_users(new_users)
