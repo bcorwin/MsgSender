@@ -10,7 +10,7 @@
     <h3>Follow up:</h3> {{ msgObj.follow_up }}<br><br>
     <table>
         <tr>
-            <th>Name</th><th>Phone number</th><th>Message</th><th>Follow up</th>
+            <th>Name</th><th>Phone number</th><th>Message</th><th>Follow up</th><th>Rating</th>
         </tr>
     
         {% for num in texts%}
@@ -19,6 +19,7 @@
             <td>{{ num.Number.number.phone_number }}</td>
             <td {% if num.Message.0 > 0 %} style="color:red" {% endif %}>{{ num.Message.1 }}</td>
             <td {% if num.Followup.0 > 0 %} style="color:red" {% endif %}>{{ num.Followup.1 }}</td>
+            <td> {{num.Rating}} </td>
         </tr>
         {% endfor %}
     </table>
