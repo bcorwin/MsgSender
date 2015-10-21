@@ -5,7 +5,7 @@ from django.utils import timezone
 
 def send_now(modeladmin, request, queryset):
     toSend = [sM for sM in queryset if sM.sent_time in (None, '') ]
-    if len(toSend) != len(queryset): messages.info(request, "Can only send now if message has not been sent yet.")
+    if len(toSend) != len(queryset): messages.info(request, "Can only send now if message has not been sent yet. Nothing changed for these messages.")
     if len(toSend) == 0: messages.error(request, "No message next send times were changed.")
     for sM in toSend:
         sM.next_send = timezone.now()
@@ -13,8 +13,7 @@ def send_now(modeladmin, request, queryset):
 
 def select_custom(modeladmin, request, queryset):
     num = len(queryset)
-    if num == 0: pass
-    elif num > 1: messages.error(request, "Please select only one custom message.")
+    if num > 1: messages.error(request, "Please select only one custom message.")
     else:
         cM = queryset[0]
         cM.selected = True
