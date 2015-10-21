@@ -1,6 +1,16 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage, dailySend, customMessage
 from Factz.do import add_custom_messages
+
+def select_custom(modeladmin, request, queryset):
+    num = len(queryset)
+    if num == 0: pass
+    elif num > 1: messages.error(request, "Please select only one custom message.")
+    else:
+        cM = queryset[0]
+        cM.selected = True
+        cM.save()
+    return None
 
 def send_custom_message(modeladmin, request, queryset):
     add_custom_messages(queryset)
@@ -66,6 +76,7 @@ class cmAdmin(admin.ModelAdmin):
     list_filter = ['last_sent', 'selected']
     search_fields = ['message']
     readonly_fields = ['last_sent']
+    actions = [select_custom]
     
 admin.site.register(Message, messageAdmin)
 admin.site.register(Number, numberAdmin)
