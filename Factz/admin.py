@@ -1,6 +1,15 @@
 from django.contrib import admin, messages
 from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage, dailySend, customMessage
 from Factz.do import add_custom_messages
+from django.utils import timezone
+
+def send_now(modeladmin, request, queryset):
+    toSend = [sM for sM in queryset if sM.sent_time in (None, '') ]
+    if len(toSend) != len(queryset): messages.info(request, "Can only send now if message has not been sent yet.")
+    if len(toSend) == 0: messages.error(request, "No message next send times were changed.")
+    for sM in toSend:
+        sM.next_send = timezone.now()
+        sM.save()
 
 def select_custom(modeladmin, request, queryset):
     num = len(queryset)
@@ -10,7 +19,6 @@ def select_custom(modeladmin, request, queryset):
         cM = queryset[0]
         cM.selected = True
         cM.save()
-    return None
 
 def send_custom_message(modeladmin, request, queryset):
     add_custom_messages(queryset)
@@ -70,6 +78,7 @@ class smAdmin(admin.ModelAdmin):
     list_display = ['active_subscription', 'next_send', 'sent_time', 'print_msg', 'rating', 'attempted']
     list_filter = ['next_send_date', 'sent_time', 'rating', 'attempted', 'is_custom']
     readonly_fields = ['next_send_date', 'is_custom']
+    actions = [send_now]
     
 class cmAdmin(admin.ModelAdmin):
     list_display = ['message', 'last_sent', 'selected']
