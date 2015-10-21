@@ -208,38 +208,19 @@ def update_status(counter, result, msg_type):
         counter['na'] += 1
     return counter
 
-def email_send_results(staOutput):
+def email_send_results(tab_list):
     '''
     Emails the output of send_to_all using the send_results.html template
     This format: out = {"texts":texts, "msgObj":msgObj} texts = [{"Number": asObj, "Message": (errCode, errMsg) , "Followup": (errCode, errMsg)}, ..]
     '''
-    msgObj = staOutput["msgObj"]
-
-    if staOutput["custom"] != True:
-        subject = msgObj.subscription.name + " sent!"
-    else:
-        cMsg = msgObj.message
-        subject = cMsg[:64]+"..." if len(cMsg) >= 67 else cMsg
-        subject = subject + " sent!"
+    subject = "Daily update"
+    
     from_email = get_value("from_email")
     to = get_value("to_emails")
     if to == None: return None
 
-    text_content = 'Send to all results:'
-    html_content = render_to_string('send_results.html', staOutput)
-    msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
-    return None
-    
-def email_new_users(new_users):
-    subject = str(len(new_users)) + " new user(s)!"
-    from_email = get_value("from_email")
-    to = get_value("to_emails")
-    if to == None: return None
-    
-    text_content = 'New users:'
-    html_content = render_to_string('new_users.html', {"Numbers":new_users})
+    text_content = 'Daily update:'
+    html_content = render_to_string('send_results.html', {"tabs": tab_list})
     msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
