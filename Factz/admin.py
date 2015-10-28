@@ -2,6 +2,8 @@ from django.contrib import admin, messages
 from Factz.models import Variable, Message, Subscription, Number, activeSubscription, sentMessage, dailySend, customMessage
 from Factz.do import add_custom_messages
 from django.utils import timezone
+from django.forms import Textarea
+from django.db import models
 
 def send_now(modeladmin, request, queryset):
     toSend = [sM for sM in queryset if sM.sent_time in (None, '') ]
@@ -53,6 +55,9 @@ class messageAdmin(admin.ModelAdmin):
     list_filter = ['subscription', 'active', 'last_sent']
     search_fields = ['message','follow_up']
     actions = [set_active, set_inactive]
+    formfield_overrides = {
+        models.CharField: {'widget': Textarea(attrs={'rows':4, 'cols':100})},
+    }
     
 class numberAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'phone_number', 'last_sent']
@@ -85,6 +90,9 @@ class cmAdmin(admin.ModelAdmin):
     search_fields = ['message']
     readonly_fields = ['last_sent']
     actions = [select_custom]
+    formfield_overrides = {
+        models.CharField: {'widget': Textarea(attrs={'rows':2, 'cols':100})},
+    }
     
 admin.site.register(Message, messageAdmin)
 admin.site.register(Number, numberAdmin)
