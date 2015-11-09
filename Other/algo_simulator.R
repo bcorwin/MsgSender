@@ -1,3 +1,4 @@
+library(ggplot2)
 library(plyr)
 
 avg_dist <- function(dates) {
@@ -24,10 +25,14 @@ min_dist <- function(dates) {
   return(min(dist))
 }
 
-run_sim <- function(n, days, func = parse(text="ages")) {
+run_sim <- function(n, days,
+                    func = parse(text="ages"),
+                    rate_fill=parse(text="3")) {
+  ratings <- NA
   start <- Sys.time()
   Message <- data.frame(
-    Message = seq(1,n)
+    Message = seq(1,n),
+    Rating = rep(NA, n)
   )
   Message$last_sent <- as.Date(NA)
   
@@ -39,11 +44,17 @@ run_sim <- function(n, days, func = parse(text="ages")) {
       min_date <- min(Message$last_sent, na.rm=TRUE)  
     }
     
+    ratings <- Message$Rating
+    ratings <- ifelse(is.na(ratings), eval(rate_fill), ratings)
+    
     ages <- ifelse(is.na(Message$last_sent), today - min_date, today - Message$last_sent) + 1
     
     msg <- sample(Message$Message, 1, prob = eval(func))
     
     Message[msg, "last_sent"] <<- today
+    if(is.na(Message[msg, "Rating"])) {
+      Message[msg, "Rating"] <<- runif(1, min = 1, max=5)
+    }
     return(msg)
   }
   
@@ -72,15 +83,22 @@ run_sim <- function(n, days, func = parse(text="ages")) {
                Min.Dist = min_dist(date),
                Avg.Dist = avg_dist(date))
   
+  results <- merge(results, subset(Message, select = c("Message", "Rating")),
+               by.x="msg", by.y="Message")
+  
+  results$Rating <- ifelse(is.na(results$Rating), "?",
+                           as.character(round(results$Rating)))
+  
   timer <- signif(Sys.time() - start, 2)
-  return(list("ans"=ans,"results"=results, "func"=func, "timer"=timer))
+  return(list("ans"=ans,"results"=results, "func"=func, "timer"=timer, "ratings"=ratings))
 }
 
-num_simulations <- 4
-out1 <-run_sim(30, 100)
-out2 <-run_sim(30, 100, func = parse(text="round(1.1^ages)"))
-out3 <-run_sim(30, 100, func = parse(text="10 * ages"))
-out4 <-run_sim(30, 100, func = parse(text="ages^10"))
+num_simulations <- 5
+out1 <-run_sim(60, 100)
+out2 <-run_sim(60, 100, func = parse(text="round(1.1^ages)"))
+out3 <-run_sim(60, 100, func = parse(text="10 * ages"))
+out4 <-run_sim(60, 100, func = parse(text="ages^10"))
+out5 <-run_sim(60, 600, func = parse(text="round((1.1*ratings)^ages)"))
 
 ymax <- max(
   sapply(seq(1,num_simulations), function(x) {
@@ -92,8 +110,23 @@ ymax <- round_any(ymax, 50, f=ceiling)
 
 for(p in seq(1,num_simulations)) {
   temp <- get(paste0("out", p))
-
-  with(temp, plot(results$dist,
-                  ylim=c(0,ymax), ylab="Day since last sent", xlab="Day",
-                  main=func, sub=paste0("Runtime=", timer, "s")))
+  title <- as.character(temp$func)
+  sub <- paste0("Runtime=", temp$timer, "s")
+  
+  plotdata <- na.omit(temp$results)
+  p <- ggplot(plotdata, aes(x=date, y=dist, color=Rating))
+  p <- p + geom_point(shape=19)
+  if(grepl("(?i)ratings", title)) p <- p + geom_smooth(method="loess")
+  p <- p + labs(y="Day since last sent", x="Day", title = title) + ylim(0,ymax)
+  plot(p)
 }
+
+# Random select number for the number of people rating.
+## n = rpois(1,3)
+# Randomly select the "true" rating (set this at the begining?)
+## m = sample(c(1,4/3,2,4,10), 1)
+# Random numbers around that average that need to be bound around
+## r = round(4*rbeta(n, shape1=m, shape2=2)+1)
+#Store those numbers because I'll be need to average or percentile them down the road
+#Take the average (or 80th percentile, or whatever) to set as the rating
+## replicate(2, mean(round(4*rbeta(rpois(1,3), shape1=sample(c(1,4/3,2,4,10), 1), shape2=2)+1)))
