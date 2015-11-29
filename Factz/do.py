@@ -5,7 +5,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
 from datetime import datetime
-from random import random
+from random import random, choice
 import csv
 
 def get_value(varname):
@@ -38,19 +38,23 @@ def next_message(subObj):
     Randomly select the next message. Older messages have higher weight.
     Weight =  number of days it's been since it was last sent
     '''
-    today = datetime.utcnow().date()
-    msg_set = Message.objects.all().filter(subscription=subObj, active=True)
-    if msg_set.exists() == False: return None
+    #First, if there are messages that have never been sent, selected randomly from them.
+    never_sent = Message.objects.all().filter(subscription=subObj, active=True, last_sent=None)
+    if len(never_sent) > 0: res = choice(never_sent)
+    else:
+        today = datetime.utcnow().date()
+        msg_set = Message.objects.all().filter(subscription=subObj, active=True)
+        if msg_set.exists() == False: return None
 
-    min_date = [m.last_sent.date() for m in msg_set if m.last_sent != None]
-    min_date = min(min_date) if len(min_date) >0 else today
+        min_date = [m.last_sent.date() for m in msg_set if m.last_sent != None]
+        min_date = min(min_date) if len(min_date) >0 else today
 
-    ages = [m.last_sent.date() if m.last_sent != None else min_date for m in msg_set]
-    ages = [int(1.25**((today - ls).days + 1)) for ls in ages]
+        ages = [m.last_sent.date() if m.last_sent != None else min_date for m in msg_set]
+        ages = [int(1.25**((today - ls).days + 1)) for ls in ages]
 
-    #randomly select a message given the above weights
-    res = weighted_choice(msg_set, ages)
-    return res
+        #randomly select a message given the above weights
+        res = weighted_choice(msg_set, ages)
+    return(res)
 
 def number_exist(phone_number):
     '''
