@@ -20,7 +20,7 @@ def sms_reply(request):
         
     r = Response()
     reply = gen_reply(from_number, message)
-    r.message(reply)
+    if reply != None: r.message(reply)
     
     return r
     

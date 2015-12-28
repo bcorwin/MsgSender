@@ -72,9 +72,7 @@ def add_user(from_number, message):
     subObj = extract_subscription(parm)
     #In future, check that that command == "subscribe"
     numObj.toggle_active(subObj, status=True)
-    out = "Welcome to " + subObj.name + "! Your first message is on its way. To unsubscribe send 'Unsubscribe PoopFactz'. Also, try replying with 'source' or a rating 1 to 5."
-    # To do: send last message that was sent for newly subscribed sub?
-    return out
+    return(None)
 
 def set_rating(numObj, rating):
     '''
@@ -88,7 +86,7 @@ def set_rating(numObj, rating):
     else:
         out = "Please submit a rating 1 through 5."
     return(out)
-        
+    
 def update_user(message, numObj):
     '''
     Use this for a number already in the db.

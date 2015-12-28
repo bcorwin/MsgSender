@@ -252,6 +252,11 @@ class activeSubscription(models.Model):
         is_new = True if not self.pk else False
         super(activeSubscription, self).save(*args, **kwargs)
         if is_new:
+            welcome_msg  = "Welcome to " + self.subscription.name + "! Your first message is on its way."
+            welcome_msg += " To unsubscribe send 'Unsubscribe " + self.subscription.name + "'."
+            welcome_msg += " Also, try replying with 'source' or a rating 1 to 5."
+            send_text(message=welcome_msg, to_number=self.number.phone_number)
+            
             msgObj = self.subscription.get_last_message()
             if msgObj is not None:
                 smObj = sentMessage(active_subscription=self, message=msgObj, next_send=timezone.now())
