@@ -1,4 +1,5 @@
 from Factz.do import sub_exist, add_number, number_exist, add_rating
+from Factz.utils import format_number
 import re
            
 class textCommand:
@@ -10,10 +11,11 @@ class textCommand:
         return self.display_name
         
 commands = [
-            textCommand("subscribe",    "Subscribe PoopFactz",  ["subscribe *(.*)", "add *(.*)"]),
+            textCommand("subscribe",    "Subscribe PoopFactz",  ["subscribe *(.*)", "start *(.*)"]),
             textCommand("unsubscribe",  "Unsubscribe PoopFactz",["unsubscribe *(.*)", "leave *(.*)", "stop *(.*)"]),
             textCommand("source",       "Source",               ["source()", "sauce()"]),
             textCommand("rate",         "Rate #",               ["rate *(\d*)", "rating *(\d*)", "(\d+)"]),
+            textCommand("add",          "Add #",                ["add *(.*)"]),
         ]
 
 def extract_command(text, commands):
@@ -70,11 +72,11 @@ def add_user(from_number, message):
     command, parm = extract_command(message, commands)
     numObj = add_number(from_number)
     subObj = extract_subscription(parm)
-    #In future, check that that command == "subscribe"
-    numObj.toggle_active(subObj, status=True)
-    out = "Welcome to " + subObj.name + "! Your first message is on its way. To unsubscribe send 'Unsubscribe PoopFactz'. Also, try replying with 'source' or a rating 1 to 5."
-    # To do: send last message that was sent for newly subscribed sub?
-    return out
+    if command == "subscribe":
+        numObj.toggle_active(subObj, status=True)
+        out = "Your request to subscribe has been submitted. You will receive a welcome message within 10 minutes if the request is processed successfully."
+    else: out = "To subscribe send 'Subscribe PoopFactz'"
+    return(out)
 
 def set_rating(numObj, rating):
     '''
@@ -88,7 +90,20 @@ def set_rating(numObj, rating):
     else:
         out = "Please submit a rating 1 through 5."
     return(out)
-        
+    
+def add_other_user(parm):
+    new_number = ''.join([d for d in parm if d.isdigit()])
+    new_number = format_number(new_number)
+    
+    subObj = extract_subscription(parm)
+    
+    if number_exist(new_number) == None:
+        chk = add_user(new_number, "Subscribe " + subObj.name)
+        out = new_number + " has been subscribed to " + subObj.name + "!"
+    else: out = new_number + " is already a user and cannot be added to " + subObj.name + "."
+    
+    return(out)
+    
 def update_user(message, numObj):
     '''
     Use this for a number already in the db.
@@ -107,6 +122,8 @@ def update_user(message, numObj):
         out = get_source(numObj)
     elif command == "rate":
         out = set_rating(numObj, parm)
+    elif command == "add":
+        out = add_other_user(parm)
     else:
         out = "Unknown command. "
         out += "Try one of these: "

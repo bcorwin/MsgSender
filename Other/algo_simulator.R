@@ -53,7 +53,7 @@ run_sim <- function(n, days,
     
     Message[msg, "last_sent"] <<- today
     if(is.na(Message[msg, "Rating"])) {
-      Message[msg, "Rating"] <<- runif(1, min = 1, max=5)
+      Message[msg, "Rating"] <<- ifelse(runif(1) > .5, runif(1, min = 1, max=5), NA)
     }
     return(msg)
   }
@@ -98,7 +98,7 @@ out1 <-run_sim(60, 100)
 out2 <-run_sim(60, 100, func = parse(text="round(1.1^ages)"))
 out3 <-run_sim(60, 100, func = parse(text="10 * ages"))
 out4 <-run_sim(60, 100, func = parse(text="ages^10"))
-out5 <-run_sim(60, 600, func = parse(text="round((1.1*ratings)^ages)"))
+out5 <-run_sim(100, 600, func = parse(text="round((1.1*ratings)^ages)"))
 
 ymax <- max(
   sapply(seq(1,num_simulations), function(x) {
