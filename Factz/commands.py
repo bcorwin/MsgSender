@@ -70,9 +70,9 @@ def add_user(from_number, message):
     Add a user to the db and generate a response
     '''
     command, parm = extract_command(message, commands)
-    numObj = add_number(from_number)
     subObj = extract_subscription(parm)
     if command == "subscribe":
+        numObj = add_number(from_number)
         numObj.toggle_active(subObj, status=True)
         out = "Your request to subscribe has been submitted. You will receive a welcome message within 10 minutes if the request is processed successfully."
     else: out = "To subscribe send 'Subscribe PoopFactz'"
