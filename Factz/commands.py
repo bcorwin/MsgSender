@@ -74,7 +74,7 @@ def add_user(from_number, message):
     subObj = extract_subscription(parm)
     if command == "subscribe":
         numObj.toggle_active(subObj, status=True)
-        out = None
+        out = "Your request to subscribe has been submitted. You will receive a welcome message within 10 minutes if the request is processed successfully."
     else: out = "To subscribe send 'Subscribe PoopFactz'"
     return(out)
 
