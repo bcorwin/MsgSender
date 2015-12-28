@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from Factz.utils import rand_code, format_number
 from Factz.messaging import send_test_message, send_message, send_text
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class Variable(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -255,11 +255,15 @@ class activeSubscription(models.Model):
             welcome_msg  = "Welcome to " + self.subscription.name + "! Your first message is on its way."
             welcome_msg += " To unsubscribe send 'Unsubscribe " + self.subscription.name + "'."
             welcome_msg += " Also, try replying with 'source' or a rating 1 to 5."
-            send_text(message=welcome_msg, to_number=self.number.phone_number)
+            
+            customObj, created = customMessage.objects.get_or_create(message=welcome_msg)
+            welcomeMsg = sentMessage(active_subscription=self, custom_message=customObj, next_send=timezone.now())
+            welcomeMsg.save()
             
             msgObj = self.subscription.get_last_message()
             if msgObj is not None:
-                smObj = sentMessage(active_subscription=self, message=msgObj, next_send=timezone.now())
+                time2send = timezone.now() + timedelta(minutes=25)
+                smObj = sentMessage(active_subscription=self, message=msgObj, next_send=time2send)
                 smObj.save()
 
     def __str__(self):
