@@ -11,7 +11,7 @@ class textCommand:
         return self.display_name
         
 commands = [
-            textCommand("subscribe",    "Subscribe PoopFactz",  ["subscribe *(.*)"]),
+            textCommand("subscribe",    "Subscribe PoopFactz",  ["subscribe *(.*)", "start *(.*)"]),
             textCommand("unsubscribe",  "Unsubscribe PoopFactz",["unsubscribe *(.*)", "leave *(.*)", "stop *(.*)"]),
             textCommand("source",       "Source",               ["source()", "sauce()"]),
             textCommand("rate",         "Rate #",               ["rate *(\d*)", "rating *(\d*)", "(\d+)"]),

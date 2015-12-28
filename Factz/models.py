@@ -189,7 +189,6 @@ class Number(models.Model):
     def get_last_sm(self):
         out = None
         asObjs = activeSubscription.objects.filter(number=self).exclude(last_sent__isnull=True).order_by('-last_sent')
-        print(asObjs)
         for asObj in asObjs:
             smObj = sentMessage.objects.all().filter(active_subscription=asObj, is_custom=False).exclude(sent_time__isnull=True).order_by('-sent_time')
             if smObj.exists():
